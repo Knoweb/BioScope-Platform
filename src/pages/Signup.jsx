@@ -42,16 +42,8 @@ export default function Signup({ onSignup, addToast }) {
       // Simulated signup for now
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Store auth token (replace with real implementation)
-      localStorage.setItem('bioscope_auth', JSON.stringify({ 
-        name, 
-        email, 
-        authenticated: true 
-      }))
-      
-      addToast?.('Account created successfully!', 'success')
-      if (onSignup) onSignup({ name, email })
-      navigate('/')
+      addToast?.('Account created successfully! Please login.', 'success')
+      navigate('/login')
     } catch (error) {
       addToast?.(error.message || 'Signup failed', 'error')
     } finally {
