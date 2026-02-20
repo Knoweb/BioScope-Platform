@@ -284,8 +284,12 @@
     flex-direction: column;
   }
 
-  .authImagePanel, .signupImagePanel {
+  .authImagePanel {
     min-height: 30vh;
+  }
+
+  .signupImagePanel {
+    min-height: 25vh;
   }
 
   .authImageTitle, .signupTitle {
@@ -309,9 +313,27 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  /* Hide image panel on mobile for signup */
+  .signupImagePanel {
+    display: none;
+  }
+
+  /* Full screen form panel on mobile */
+  .authFormPanel {
+    flex: 1;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+  }
+
   .authCard {
     padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  .authLogo svg {
+    width: 42px;
+    height: 42px;
   }
 
   .authTitle {
@@ -319,23 +341,91 @@
   }
 
   .authSubtitle {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
   }
 
-  .authImagePanel, .signupImagePanel {
-    min-height: 25vh;
+  .formInput {
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
   }
 
-  .authImageContent, .signupImageContent {
-    padding: 2rem;
+  .submitBtn {
+    padding: 0.95rem 1.25rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .authFormPanel {
+    padding: 1rem;
   }
 
-  .signupTitle {
+  .authCard {
+    padding: 1.75rem 1.25rem;
+    border-radius: 16px;
+  }
+
+  .authLogo {
+    margin-bottom: 1.25rem;
+  }
+
+  .authLogo svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .authTitle {
     font-size: 1.5rem;
   }
 
-  .signupDescription {
+  .authSubtitle {
+    font-size: 0.825rem;
+  }
+
+  .authForm {
+    gap: 0.875rem;
+  }
+
+  .formLabel {
+    font-size: 0.8rem;
+  }
+
+  .formInput {
+    padding: 0.8rem 0.875rem;
     font-size: 0.95rem;
+  }
+
+  .submitBtn {
+    padding: 0.875rem 1rem;
+  }
+
+  .authFooter {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .footerText, .footerLink {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .authFormPanel {
+    padding: 0.75rem;
+  }
+
+  .authCard {
+    padding: 1.5rem 1rem;
+    box-shadow: none;
+    border: none;
+  }
+
+  .authForm {
+    gap: 0.75rem;
+  }
+
+  .formGroup {
+    gap: 0.35rem;
   }
 }
 
