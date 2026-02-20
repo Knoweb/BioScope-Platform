@@ -20,16 +20,21 @@
     linear-gradient(rgba(168,245,198,0.015) 1px, transparent 1px),
     linear-gradient(90deg, rgba(168,245,198,0.015) 1px, transparent 1px);
   background-size: 32px 32px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .layout {
-    flex-direction: column;
+    flex-direction: row;
   }
   
   .content {
     width: 100%;
-    margin-left: 0;
+    flex: 1;
+  }
+
+  .main {
+    padding-bottom: 20px;
   }
 }
