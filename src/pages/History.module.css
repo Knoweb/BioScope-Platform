@@ -49,3 +49,51 @@
 .paginBtn:hover:not(:disabled) { color: var(--text-secondary); border-color: var(--border-bright); }
 .paginBtn:disabled { opacity: 0.4; }
 .paginActive { color: var(--green) !important; border-color: var(--green) !important; background: var(--green-glow) !important; }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .page { padding: 16px; }
+  
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .searchWrap {
+    min-width: 100%;
+  }
+  
+  .toolbarRight {
+    justify-content: space-between;
+  }
+  
+  .table {
+    font-size: 11px;
+  }
+  
+  .table th,
+  .table td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  
+  .table th:not(:first-child):not(:nth-child(2)) {
+    display: none;
+  }
+  
+  .table td:not(:first-child):not(:nth-child(2)) {
+    display: none;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .paginBtns {
+    justify-content: center;
+  }
+}

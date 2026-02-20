@@ -21,3 +21,15 @@
     linear-gradient(90deg, rgba(168,245,198,0.015) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  
+  .content {
+    width: 100%;
+    margin-left: 0;
+  }
+}

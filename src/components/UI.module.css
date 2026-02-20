@@ -29,6 +29,39 @@
 .metricSkel { width: 100px; height: 36px; margin: 0 0 8px; }
 .metricBar { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--card-accent, transparent), transparent); opacity: 0.3; }
 
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .metricCard {
+    padding: 16px 18px;
+  }
+  
+  .metricValue {
+    font-size: 28px;
+  }
+  
+  .metricUnit {
+    font-size: 14px;
+  }
+  
+  .metricIcon {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .metricCard {
+    padding: 14px 16px;
+  }
+  
+  .metricValue {
+    font-size: 24px;
+  }
+  
+  .metricLabel {
+    font-size: 9px;
+  }
+}
+
 /* ── DeviceTabs ── */
 .deviceTabs { display: flex; gap: 8px; margin-bottom: 20px; }
 .deviceTab {

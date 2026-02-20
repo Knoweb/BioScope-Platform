@@ -11,4 +11,10 @@
 @media (max-width: 900px) {
   .metricGrid { grid-template-columns: 1fr; }
   .infoGrid { grid-template-columns: repeat(2, 1fr); }
+  .page { padding: 16px; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  .infoGrid { grid-template-columns: 1fr; }
 }

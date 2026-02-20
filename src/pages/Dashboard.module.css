@@ -48,6 +48,51 @@
 .statCard { padding: 16px 18px !important; }
 .statLabel { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; }
 .statValue { font-size: 34px; font-weight: 800; font-family: var(--font-mono); line-height: 1; }
+
+/* Mobile Responsive */
+@media (max-width: 968px) {
+  .page {
+    padding: 16px;
+  }
+  
+  .deviceRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .statValue {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 12px;
+  }
+  
+  .miniMetrics {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .miniVal {
+    font-size: 20px;
+  }
+  
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .deviceId {
+    font-size: 16px;
+  }
+}
 .statUnit { font-size: 16px; font-weight: 400; opacity: 0.6; }
 
 @media (max-width: 900px) {

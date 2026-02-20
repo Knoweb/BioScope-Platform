@@ -29,6 +29,21 @@
 .exportFormat { font-size: 16px; font-weight: 700; font-family: var(--font-mono); flex: 1; }
 .exportDesc { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
 
+/* Mobile Responsive */
+@media (max-width: 968px) {
+  .page { padding: 16px; }
+  .reportGrid { grid-template-columns: 1fr; }
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  .statGrid { grid-template-columns: 1fr; }
+  .topActions { flex-direction: column; }
+  .reportTitle { font-size: 16px; }
+  .statVal { font-size: 22px; }
+}
+
 @media (max-width: 900px) {
   .reportGrid { grid-template-columns: 1fr; }
 }

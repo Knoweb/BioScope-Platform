@@ -27,4 +27,12 @@
 .addActions { display: flex; gap: 8px; }
 .addHint { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); }
 
-@media (max-width: 900px) { .devGrid { grid-template-columns: 1fr; } .addForm { flex-direction: column; align-items: stretch; } }
+@media (max-width: 900px) { .devGrid { grid-template-columns: 1fr; } .addForm { flex-direction: column; align-items: stretch; } .page { padding: 16px; } }
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  .devId { font-size: 32px; }
+  .devName { font-size: 16px; }
+  .devActions { flex-direction: column; }
+  .pageActions { flex-direction: column; }
+}
