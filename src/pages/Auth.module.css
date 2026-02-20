@@ -1,0 +1,358 @@
+.authContainer {
+  min-height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  /* Force dark theme colors regardless of light mode */
+  --text-primary: #e8f5e9;
+  --text-secondary: #81c784;
+  --text-muted: #4a7a5a;
+  --border-subtle: #132a1e;
+  --border-mid: #1d3e2c;
+  --bg-input: #0a1c14;
+  --r-md: 10px;
+}
+
+/* Left Side - Image Panel */
+.authImagePanel {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-image: url('/assets/bg_blue.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.authImageContent {
+  display: none;
+}
+/* Signup Page - Image Panel with Watermark and Text */
+.signupImagePanel {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/assets/signup.jpeg');
+  background-size: cover;
+  background-position: center;
+}
+
+.signupImagePanel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.signupImageContent {
+  display: none;
+}
+
+.signupTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.signupDescription {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #e8f5e9;
+  margin: 0;
+  font-weight: 400;
+  text-align: justify;
+}
+/* Right Side - Form Panel */
+.authFormPanel {
+  flex: 1;
+  background: #092d33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  position: relative;
+  overflow-y: auto;
+}
+
+.authFormPanel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 50%,
+    rgba(76, 175, 80, 0.1) 0%,
+    transparent 50%
+  );
+}
+
+.authCard {
+  position: relative;
+  z-index: 1;
+  background: rgba(4, 11, 32, 0.95);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 20px;
+  padding: 2rem 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(76, 175, 80, 0.15);
+  animation: fadeUp 0.6s ease-out;
+  backdrop-filter: blur(10px);
+  margin: auto;
+}
+
+.authLogo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.authLogo svg {
+  margin: 0 auto 0.75rem;
+  display: block;
+  filter: drop-shadow(0 0 16px rgba(76, 175, 80, 0.3));
+  width: 50px;
+  height: 50px;
+}
+
+.authTitle {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #66bb6a;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.authSubtitle {
+  font-size: 0.9rem;
+  color: #81c784;
+  margin: 0;
+  font-weight: 400;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #66bb6a;
+  letter-spacing: 0.02em;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: var(--r-md);
+  color: #1b5e20;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.formInput:hover {
+  background: #ffffff;
+  border-color: #66bb6a;
+}
+
+.formInput:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  background: #ffffff;
+}
+
+.formInput::placeholder {
+  color: rgba(46, 125, 50, 0.5);
+}
+
+.formActions {
+  margin-top: 0.25rem;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  background: #4caf50;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #66bb6a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.formFooter {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.link {
+  color: #66bb6a;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: #81c784;
+  text-decoration: underline;
+}
+
+.authFooter {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(76, 175, 80, 0.2);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footerText {
+  color: #81c784;
+  font-size: 0.85rem;
+}
+
+.footerLink {
+  color: #66bb6a;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: #81c784;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .authContainer {
+    flex-direction: column;
+  }
+
+  .authImagePanel, .signupImagePanel {
+    min-height: 30vh;
+  }
+
+  .authImageTitle, .signupTitle {
+    font-size: 2rem;
+  }
+
+  .authImageSubtitle {
+    font-size: 1rem;
+  }
+
+  .signupDescription {
+    font-size: 1rem;
+  }
+
+  .signupImageContent {
+    padding: 2.5rem;
+  }
+
+  .authFormPanel {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .authCard {
+    padding: 2rem 1.5rem;
+  }
+
+  .authTitle {
+    font-size: 1.75rem;
+  }
+
+  .authSubtitle {
+    font-size: 0.95rem;
+  }
+
+  .authImagePanel, .signupImagePanel {
+    min-height: 25vh;
+  }
+
+  .authImageContent, .signupImageContent {
+    padding: 2rem;
+  }
+
+  .signupTitle {
+    font-size: 1.5rem;
+  }
+
+  .signupDescription {
+    font-size: 0.95rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

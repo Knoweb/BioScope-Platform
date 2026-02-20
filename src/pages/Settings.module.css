@@ -1,0 +1,17 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; max-width: 760px; }
+.settingRows { display: flex; flex-direction: column; }
+.settingRows > div:last-child { border-bottom: none !important; }
+.select { padding: 9px 14px; font-size: 15px; font-family: var(--font-mono); border-radius: var(--r-sm); min-width: 140px; }
+
+.unitBtns { display: flex; border: 1px solid var(--border-mid); border-radius: var(--r-sm); overflow: hidden; }
+.unitBtn { padding: 8px 18px; font-size: 15px; font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); background: transparent; border: none; transition: all 0.18s; }
+.unitActive { background: var(--green-glow) !important; color: var(--green) !important; }
+
+.accountRow { display: flex; align-items: center; gap: 16px; padding: 6px 0; margin-bottom: 16px; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--green-dim); background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; font-family: var(--font-mono); color: var(--green-dim); flex-shrink: 0; }
+.accountName { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+.accountEmail { font-size: 14px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 6px; }
+
+.logoutRow { border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; justify-content: flex-end; }
+
+.saveRow { display: flex; gap: 10px; }

@@ -1,0 +1,14 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.metricGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.chartCard { }
+.infoCard { }
+.infoGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.infoRow { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+.infoRow:nth-child(n+4) { border-bottom: none; }
+.infoLabel { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.infoValue { font-size: 16px; font-weight: 600; font-family: var(--font-mono); color: var(--text-primary); }
+
+@media (max-width: 900px) {
+  .metricGrid { grid-template-columns: 1fr; }
+  .infoGrid { grid-template-columns: repeat(2, 1fr); }
+}

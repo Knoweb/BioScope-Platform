@@ -1,0 +1,30 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.pageActions { display: flex; gap: 10px; }
+.devGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.devCard { display: flex; flex-direction: column; gap: 12px; }
+
+.devHeader { display: flex; align-items: center; justify-content: space-between; }
+.devId { font-size: 40px; font-weight: 900; font-family: var(--font-mono); color: var(--green); line-height: 1; }
+.devName { font-size: 18px; font-weight: 700; }
+.devType { font-size: 14px; color: var(--text-muted); }
+
+.divider { height: 1px; background: var(--border-subtle); }
+
+.infoRows { display: flex; flex-direction: column; }
+
+.componentSection { }
+.compLabel { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; }
+.compList { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.devActions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Add card */
+.addCard { }
+.addForm { display: flex; align-items: flex-end; gap: 12px; }
+.inputGroup { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.inputLabel { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1.5px; }
+.input { padding: 10px 14px; font-size: 16px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 2px; }
+.addActions { display: flex; gap: 8px; }
+.addHint { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); }
+
+@media (max-width: 900px) { .devGrid { grid-template-columns: 1fr; } .addForm { flex-direction: column; align-items: stretch; } }

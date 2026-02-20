@@ -1,0 +1,51 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+.toolbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.searchWrap { position: relative; flex: 1; min-width: 200px; }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
+.searchInput { width: 100%; padding: 9px 12px 9px 36px; font-size: 13px; border-radius: var(--r-sm); }
+.toolbarRight { display: flex; align-items: center; gap: 8px; }
+.sortBtn {
+  padding: 8px 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--border-mid);
+  font-size: 12px; font-family: var(--font-mono); color: var(--text-muted);
+  background: transparent; transition: all 0.18s;
+}
+.sortBtn:hover { color: var(--text-secondary); border-color: var(--border-bright); }
+
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th {
+  text-align: left; padding: 10px 14px;
+  font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);
+  letter-spacing: 2px; border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+.table td { padding: 13px 14px; border-bottom: 1px solid rgba(19,42,30,0.6); vertical-align: middle; }
+.row:hover td { background: rgba(168,245,198,0.02); }
+.row:last-child td { border-bottom: none; }
+
+.cellId { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.cellTime { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+.val { font-family: var(--font-mono); font-weight: 700; font-size: 13px; margin-right: 8px; }
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap; gap: 10px;
+}
+.paginInfo { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+.paginBtns { display: flex; gap: 4px; }
+.paginBtn {
+  padding: 5px 10px; border-radius: 5px;
+  border: 1px solid var(--border-mid);
+  font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);
+  background: transparent; transition: all 0.18s;
+}
+.paginBtn:hover:not(:disabled) { color: var(--text-secondary); border-color: var(--border-bright); }
+.paginBtn:disabled { opacity: 0.4; }
+.paginActive { color: var(--green) !important; border-color: var(--green) !important; background: var(--green-glow) !important; }
