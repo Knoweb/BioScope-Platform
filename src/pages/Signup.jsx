@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
+import { authHelpers } from './../lib/supabase'
 
 export default function Signup({ onSignup, addToast }) {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ export default function Signup({ onSignup, addToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     const { name, email, password, confirmPassword } = formData
 
     if (!name || !email || !password || !confirmPassword) {
@@ -38,11 +39,22 @@ export default function Signup({ onSignup, addToast }) {
 
     setLoading(true)
     try {
-      // TODO: Replace with actual Supabase auth
-      // Simulated signup for now
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      addToast?.('Account created successfully! Please login.', 'success')
+      const { data, error } = await authHelpers.signUp(email, password, { name })
+
+      if (error) {
+        addToast?.(error.message || 'Signup failed', 'error')
+        return
+      }
+
+      // If email confirmation is disabled in Supabase, user is immediately active
+      // If enabled, they'll need to confirm their email first
+      if (data?.user?.identities?.length === 0) {
+        addToast?.('An account with this email already exists.', 'error')
+        return
+      }
+
+      addToast?.('Account created successfully! Please sign in.', 'success')
+      if (onSignup) onSignup(data.user)
       navigate('/login')
     } catch (error) {
       addToast?.(error.message || 'Signup failed', 'error')
@@ -68,7 +80,9 @@ export default function Signup({ onSignup, addToast }) {
             temperature, humidity, and light — all monitored in real time, with 
             automated responses and remote manual control.
             <br /><br />
-            Monitored.Controlled.Connected. BioScope gives you the power to create the perfect environment for your plants, pets, or projects, no matter where you are.
+            Monitored. Controlled. Connected. BioScope gives you the power to create 
+            the perfect environment for your plants, pets, or projects, no matter 
+            where you are.
           </p>
         </div>
       </div>

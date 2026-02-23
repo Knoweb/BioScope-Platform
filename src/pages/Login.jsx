@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
+import { authHelpers } from './../lib/supabase'
 
 export default function Login({ onLogin, addToast }) {
   const [email, setEmail] = useState('')
@@ -17,15 +18,15 @@ export default function Login({ onLogin, addToast }) {
 
     setLoading(true)
     try {
-      // TODO: Replace with actual Supabase auth
-      // Simulated login for now
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      // Store auth token (replace with real implementation)
-      localStorage.setItem('bioscope_auth', JSON.stringify({ email, authenticated: true }))
-      
+      const { data, error } = await authHelpers.signIn(email, password)
+
+      if (error) {
+        addToast?.(error.message || 'Login failed', 'error')
+        return
+      }
+
       addToast?.('Login successful!', 'success')
-      if (onLogin) onLogin({ email })
+      if (onLogin) onLogin(data.user)
       navigate('/')
     } catch (error) {
       addToast?.(error.message || 'Login failed', 'error')

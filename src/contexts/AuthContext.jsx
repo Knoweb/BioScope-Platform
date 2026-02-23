@@ -1,64 +1,35 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
-const AuthContext = createContext(null)
+const AuthContext = createContext({})
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing auth on mount
-    const checkAuth = () => {
-      try {
-        const stored = localStorage.getItem('bioscope_auth')
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          if (parsed.authenticated) {
-            setUser(parsed)
-          }
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error)
-      } finally {
-        setLoading(false)
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Listen for login/logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null)
       }
-    }
-    
-    checkAuth()
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = (userData) => {
-    setUser(userData)
-    localStorage.setItem('bioscope_auth', JSON.stringify({
-      ...userData,
-      authenticated: true
-    }))
-  }
-
-  const signup = (userData) => {
-    setUser(userData)
-    localStorage.setItem('bioscope_auth', JSON.stringify({
-      ...userData,
-      authenticated: true
-    }))
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('bioscope_auth')
-  }
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
-}
+// Custom hook — use this in any component
+export const useAuth = () => useContext(AuthContext)  
