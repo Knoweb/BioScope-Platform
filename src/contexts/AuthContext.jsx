@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { signOut } from '../api/auth'
 
 const AuthContext = createContext({})
 
@@ -24,8 +25,13 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
+  const logout = async () => {
+    await signOut()
+    setUser(null)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   )
