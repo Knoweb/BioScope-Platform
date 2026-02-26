@@ -1,0 +1,78 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.controlGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.controlCard {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+  padding-bottom: 24px !important;
+  transition: border-color 0.2s;
+}
+.controlCard:hover { border-color: var(--a-color, var(--border-mid)) !important; }
+
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.actIcon { font-size: 36px; }
+.actName { font-size: 22px; font-weight: 800; }
+.actDesc { font-size: 14px; color: var(--text-muted); }
+.actAuto { font-size: 12px; font-family: var(--font-mono); color: var(--text-dim); padding: 6px 10px; background: var(--bg-surface); border-radius: 4px; border: 1px solid var(--border-subtle); }
+.controlRow { margin-top: 4px; }
+
+.statusBar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; transition: background 0.4s;
+}
+
+/* Overview table */
+.overviewTable { display: flex; flex-direction: column; gap: 0; }
+.overviewHeader {
+  display: grid; grid-template-columns: 1.5fr repeat(3, 1fr);
+  padding: 8px 0 10px; border-bottom: 1px solid var(--border-subtle);
+  font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1.5px;
+}
+.overviewRow {
+  display: grid; grid-template-columns: 1.5fr repeat(3, 1fr);
+  padding: 14px 0; border-bottom: 1px solid var(--border-subtle);
+  align-items: center;
+}
+.overviewRow:last-child { border-bottom: none; }
+.overviewDevice { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
+
+/* Rules */
+.ruleList { display: flex; flex-direction: column; gap: 8px; }
+.ruleRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--border-subtle);
+}
+.ruleRow:last-child { border-bottom: none; }
+.ruleAccent { width: 3px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+.ruleContent { flex: 1; }
+.ruleCondition { font-size: 15px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); }
+.ruleAction { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 900px) {
+  .controlGrid { grid-template-columns: 1fr; }
+  .page { padding: 16px; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  
+  .actName { font-size: 18px; }
+  .actIcon { font-size: 28px; }
+  
+  .overviewHeader,
+  .overviewRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .overviewHeader {
+    display: none;
+  }
+  
+  .overviewRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+}

@@ -1,0 +1,97 @@
+// ─── Auth API ────────────────────────────────────────────────────────────────
+// Calls your Express backend for all authentication operations
+
+import { api, saveToken, clearToken } from '../lib/api'
+
+export const authAPI = {
+
+  // Sign in → saves token to localStorage
+  signIn: async (email, password) => {
+    try {
+      const data = await api.post('/auth/signin', { email, password })
+      if (data.session?.access_token) {
+        saveToken(data.session.access_token)
+        // Also save refresh token
+        localStorage.setItem('bioscope_refresh_token', data.session.refresh_token)
+      }
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  // Sign up
+  signUp: async (email, password, name) => {
+    try {
+      const data = await api.post('/auth/signup', { email, password, name })
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  // Sign out → clears token
+  signOut: async () => {
+    try {
+      await api.post('/auth/signout')
+    } catch (_) {
+      // Even if backend call fails, clear local tokens
+    } finally {
+      clearToken()
+      localStorage.removeItem('bioscope_refresh_token')
+    }
+    return { error: null }
+  },
+
+  // Get current logged-in user
+  getMe: async () => {
+    try {
+      const data = await api.get('/auth/me')
+      return { user: data.user, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  },
+
+  // Update profile (name, email, password)
+  updateMe: async (updates) => {
+    try {
+      const data = await api.put('/auth/me', updates)
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  // Send password reset email
+  resetPassword: async (email) => {
+    try {
+      const data = await api.post('/auth/reset-password', { email })
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  // Refresh access token
+  refreshToken: async () => {
+    try {
+      const refresh_token = localStorage.getItem('bioscope_refresh_token')
+      if (!refresh_token) throw new Error('No refresh token')
+      const data = await api.post('/auth/refresh', { refresh_token })
+      if (data.access_token) {
+        saveToken(data.access_token)
+        localStorage.setItem('bioscope_refresh_token', data.refresh_token)
+      }
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  // Check if token exists in localStorage
+  getStoredToken: () => localStorage.getItem('bioscope_token'),
+
+  // Check if user is logged in (has token)
+  isLoggedIn: () => !!localStorage.getItem('bioscope_token')
+}

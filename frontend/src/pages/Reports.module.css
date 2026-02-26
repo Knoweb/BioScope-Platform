@@ -1,0 +1,49 @@
+.page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.topActions { display: flex; gap: 10px; }
+.reportGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.reportCard { display: flex; flex-direction: column; gap: 16px; }
+.reportHeader { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.reportTitle { font-size: 20px; font-weight: 800; font-family: var(--font-mono); flex: 1; }
+.reportMeta { display: flex; gap: 6px; }
+
+.statSection { }
+.statSectionLabel { font-size: 13px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1.5px; margin-bottom: 10px; }
+.statGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+.statBox {
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md); padding: 14px 16px;
+  border-top: 2px solid var(--c, var(--border-mid));
+}
+.statLabel { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 2px; margin-bottom: 6px; }
+.statVal { font-size: 26px; font-weight: 800; font-family: var(--font-mono); }
+.statUnit { font-size: 14px; font-weight: 400; opacity: 0.6; margin-left: 2px; }
+
+.exportOptions { display: flex; flex-direction: column; gap: 0; }
+.exportOption {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 0; border-bottom: 1px solid var(--border-subtle);
+}
+.exportOption:last-child { border-bottom: none; }
+.exportIcon { font-size: 26px; width: 40px; text-align: center; }
+.exportFormat { font-size: 16px; font-weight: 700; font-family: var(--font-mono); flex: 1; }
+.exportDesc { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+/* Mobile Responsive */
+@media (max-width: 968px) {
+  .page { padding: 16px; }
+  .reportGrid { grid-template-columns: 1fr; }
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 12px; }
+  .statGrid { grid-template-columns: 1fr; }
+  .topActions { flex-direction: column; }
+  .reportTitle { font-size: 16px; }
+  .statVal { font-size: 22px; }
+}
+
+@media (max-width: 900px) {
+  .reportGrid { grid-template-columns: 1fr; }
+}
