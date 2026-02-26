@@ -6,10 +6,10 @@ const router = Router()
 
 router.use(authenticate)
 
-router.get('/',      getAutomationRules)
-router.get('/:id',   getAutomationRuleById)
-router.post('/',     requireRole('admin', 'operator'), createAutomationRule)
-router.patch('/:id', requireRole('admin', 'operator'), updateAutomationRule)
-router.delete('/:id',requireRole('admin'), deleteAutomationRule)
+router.get('/', getAutomationRules)
+router.get('/:id', getAutomationRuleById)
+router.post('/', requireRole('admin', 'owner', 'operator'), createAutomationRule)
+router.patch('/:id', requireRole('admin', 'owner', 'operator'), updateAutomationRule)
+router.delete('/:id', requireRole('admin', 'owner'), deleteAutomationRule)
 
 export default router

@@ -26,19 +26,25 @@ const request = async (endpoint, options = {}) => {
   }
 
   const res = await fetch(`${API_URL}${endpoint}`, config)
-  const data = await res.json()
+
+  // Handle 204 No Content or empty responses safely
+  let data = null
+  if (res.status !== 204) {
+    const text = await res.text()
+    if (text) data = JSON.parse(text)
+  }
 
   if (!res.ok) {
-    throw new Error(data.error || `Request failed: ${res.status}`)
+    throw new Error(data?.error || `Request failed: ${res.status}`)
   }
 
   return data
 }
 
 export const api = {
-  get:    (endpoint)        => request(endpoint),
-  post:   (endpoint, body)  => request(endpoint, { method: 'POST',   body: JSON.stringify(body) }),
-  patch:  (endpoint, body)  => request(endpoint, { method: 'PATCH',  body: JSON.stringify(body) }),
-  put:    (endpoint, body)  => request(endpoint, { method: 'PUT',    body: JSON.stringify(body) }),
-  delete: (endpoint)        => request(endpoint, { method: 'DELETE' }),
+  get: (endpoint) => request(endpoint),
+  post: (endpoint, body) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
+  patch: (endpoint, body) => request(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
+  put: (endpoint, body) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+  delete: (endpoint) => request(endpoint, { method: 'DELETE' }),
 }

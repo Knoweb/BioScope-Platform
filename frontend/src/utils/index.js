@@ -5,21 +5,31 @@ export const DEVICES = ['C1', 'C2']
 export const fmt = (v, decimals = 1) =>
   v != null ? Number(v).toFixed(decimals) : '—'
 
+// Helper to strip timezone info from DB timestamps so they are treated as exactly local time
+const parseLocal = (ts) => {
+  if (typeof ts !== 'string') return ts
+  // Convert "2026-02-26 12:47:55" -> "2026-02-26T12:47:55"
+  let iso = ts.replace(' ', 'T')
+  // Remove trailing timezone indicators like Z, +00, +00:00, -05:00
+  iso = iso.replace(/(Z|[+-]\d{2}(?::?\d{2})?)$/, '')
+  return iso
+}
+
 export const fmtTime = (ts) => {
   if (!ts) return ''
-  try { return format(typeof ts === 'string' ? parseISO(ts) : new Date(ts), 'HH:mm:ss') }
+  try { return format(new Date(parseLocal(ts)), 'HH:mm:ss') }
   catch { return '' }
 }
 
 export const fmtDateTime = (ts) => {
   if (!ts) return ''
-  try { return format(typeof ts === 'string' ? parseISO(ts) : new Date(ts), 'MMM d, HH:mm') }
+  try { return format(new Date(parseLocal(ts)), 'MMM d, HH:mm') }
   catch { return '' }
 }
 
 export const fmtDateFull = (ts) => {
   if (!ts) return ''
-  try { return format(typeof ts === 'string' ? parseISO(ts) : new Date(ts), 'MMM d yyyy, HH:mm:ss') }
+  try { return format(new Date(parseLocal(ts)), 'MMM d yyyy, HH:mm:ss') }
   catch { return '' }
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { readingsAPI, controlsAPI, alertsAPI } from '../api'
+import { readingsAPI, controlsAPI, alertsAPI, automationAPI } from '../api'
 import { api } from '../lib/api'
 import { getRealtimeClient } from '../lib/supabase'
 
@@ -370,4 +370,58 @@ export function useAlerts(interval = 30000) {
   useInterval(fetch_, interval)
 
   return { alerts, rules, loading, refetch: fetch_ }
+}
+
+// ── useAutomationRules ─────────────────────────────────────────────────────
+export function useAutomationRules(deviceId) {
+  const [rules, setRules] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch_ = useCallback(async () => {
+    try {
+      const { data } = await automationAPI.getRules(deviceId || '')
+      setRules(data || [])
+    } finally {
+      setLoading(false)
+    }
+  }, [deviceId])
+
+  useEffect(() => {
+    fetch_()
+
+    const realtime = getRealtimeClient()
+    const channel = realtime
+      .channel('public:automation_rules')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'automation_rules' }, (payload) => {
+        setRules(prev => [payload.new, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'automation_rules' }, (payload) => {
+        setRules(prev => prev.map(r => r.rule_id === payload.new.rule_id ? payload.new : r))
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'automation_rules' }, (payload) => {
+        setRules(prev => prev.filter(r => r.rule_id !== payload.old.rule_id))
+      })
+      .subscribe()
+
+    return () => realtime.removeChannel(channel)
+  }, [fetch_])
+
+  const createRule = async (ruleData) => {
+    const { data } = await automationAPI.createRule({ ...ruleData, device_id: deviceId || null })
+    if (data) setRules(prev => [data, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
+    return data
+  }
+
+  const updateRule = async (id, updates) => {
+    const { data } = await automationAPI.updateRule(id, updates)
+    if (data) setRules(prev => prev.map(r => r.rule_id === id ? data : r))
+    return data
+  }
+
+  const deleteRule = async (id) => {
+    await automationAPI.deleteRule(id)
+    setRules(prev => prev.filter(r => r.rule_id !== id))
+  }
+
+  return { rules, loading, createRule, updateRule, deleteRule, refetch: fetch_ }
 }
