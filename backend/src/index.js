@@ -27,7 +27,22 @@ const PORT = process.env.PORT || 5000
 // ── Security & Middleware ─────────────────────────────────────────────────────
 app.use(helmet())
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost and local network IPs (e.g., 192.168.x.x)
+    const allowed = origin.includes('localhost') ||
+      origin.includes('127.0.0.1') ||
+      origin.includes('192.168.') ||
+      origin === process.env.FRONTEND_URL;
+
+    if (allowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }))
 app.use(morgan('dev'))
@@ -48,16 +63,16 @@ app.get('/health', (req, res) => {
 })
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',        authRoutes)
-app.use('/api/users',       userRoutes)
-app.use('/api/devices',     deviceRoutes)
-app.use('/api/sensors',     sensorRoutes)
-app.use('/api/readings',    readingRoutes)
-app.use('/api/actuators',   actuatorRoutes)
-app.use('/api/controls',    controlRoutes)
-app.use('/api/alerts',      alertRoutes)
-app.use('/api/automation',  automationRoutes)
-app.use('/api/audit',       auditRoutes)
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/devices', deviceRoutes)
+app.use('/api/sensors', sensorRoutes)
+app.use('/api/readings', readingRoutes)
+app.use('/api/actuators', actuatorRoutes)
+app.use('/api/controls', controlRoutes)
+app.use('/api/alerts', alertRoutes)
+app.use('/api/automation', automationRoutes)
+app.use('/api/audit', auditRoutes)
 
 // ── Error Handlers ────────────────────────────────────────────────────────────
 app.use(notFound)

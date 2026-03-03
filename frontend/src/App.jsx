@@ -1,33 +1,34 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useCallback } from 'react'
 import { useAuth } from './contexts/AuthContext'
-import Sidebar  from './components/Sidebar'
-import Topbar   from './components/Topbar'
-import Toast    from './components/Toast'
+import Sidebar from './components/Sidebar'
+import Topbar from './components/Topbar'
+import Toast from './components/Toast'
 import { useToast } from './hooks'
 
 import Dashboard from './pages/Dashboard'
-import Sensors   from './pages/Sensors'
-import Controls  from './pages/Controls'
-import History   from './pages/History'
-import Reports   from './pages/Reports'
-import Devices   from './pages/Devices'
-import Alerts    from './pages/Alerts'
-import Settings  from './pages/Settings'
-import Login     from './pages/Login'
-import Signup    from './pages/Signup'
+import Sensors from './pages/Sensors'
+import Controls from './pages/Controls'
+import History from './pages/History'
+import Reports from './pages/Reports'
+import Devices from './pages/Devices'
+import Alerts from './pages/Alerts'
+import Settings from './pages/Settings'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import Landing from './pages/Landing'
 
 import styles from './App.module.css'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
-  
+
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         minHeight: '100vh',
         color: 'var(--text-muted)',
         fontFamily: 'var(--font-mono)',
@@ -37,7 +38,7 @@ function ProtectedRoute({ children }) {
       </div>
     )
   }
-  
+
   return user ? children : <Navigate to="/login" replace />
 }
 
@@ -45,6 +46,7 @@ export default function App() {
   const { toasts, add: addToast } = useToast()
   const { user, login, signup } = useAuth()
   const [lastUpdate, setLastUpdate] = useState(Date.now())
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleRefresh = useCallback(() => {
     setLastUpdate(Date.now())
@@ -60,9 +62,10 @@ export default function App() {
     return (
       <>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login onLogin={login} addToast={addToast} />} />
           <Route path="/signup" element={<Signup onSignup={signup} addToast={addToast} />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toast toasts={toasts} />
       </>
@@ -72,9 +75,23 @@ export default function App() {
   // Protected routes (main app)
   return (
     <div className={styles.layout}>
-      <Sidebar />
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className={styles.sidebarOverlay}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <Sidebar
+        mobileOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
       <div className={styles.content}>
-        <Topbar onRefresh={handleRefresh} lastUpdate={lastUpdate} />
+        <Topbar
+          onRefresh={handleRefresh}
+          lastUpdate={lastUpdate}
+          onToggleMenu={() => setMobileMenuOpen(p => !p)}
+        />
         <main className={styles.main}>
           <Routes>
             <Route path="/" element={

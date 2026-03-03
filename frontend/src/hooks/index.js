@@ -230,8 +230,19 @@ export function useDevices() {
     finally { setLoading(false) }
   }, [])
 
+  const removeDevice = async (id) => {
+    try {
+      await api.delete(`/devices/${id}`)
+      setDevices(prev => prev.filter(d => d.device_id !== id))
+      return true
+    } catch (e) {
+      console.error('Failed to remove device', e)
+      throw e
+    }
+  }
+
   useEffect(() => { fetch_() }, [fetch_])
-  return { devices, loading, refetch: fetch_ }
+  return { devices, loading, refetch: fetch_, removeDevice }
 }
 
 // ── useDashboardReadings ───────────────────────────────────────────────────

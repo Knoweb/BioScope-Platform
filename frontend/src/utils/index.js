@@ -69,3 +69,86 @@ export const downloadJSON = (data, filename) => {
   a.click()
   URL.revokeObjectURL(a.href)
 }
+
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+
+export const downloadPDF = (rows, deviceId, rangeLabel, filename) => {
+  if (!rows || !rows.length) return
+
+  const doc = new jsPDF()
+
+  // Header
+  doc.setFontSize(20)
+  doc.setTextColor(40, 40, 40)
+  doc.text('BioScope Analytics Report', 14, 22)
+
+  // Meta Info
+  doc.setFontSize(11)
+  doc.setTextColor(100, 100, 100)
+  doc.text(`Device ID: ${deviceId}`, 14, 32)
+  doc.text(`Time Range: ${rangeLabel}`, 14, 38)
+  doc.text(`Total Readings: ${rows.length}`, 14, 44)
+  doc.text(`Generated: ${fmtDateFull(new Date().toISOString())}`, 14, 50)
+
+  // Table Data mapping
+  const tableData = rows.map(r => [
+    fmtDateTime(r.recorded_at),
+    fmt(r.temperature, 1) + ' °C',
+    fmt(r.humidity, 1) + ' %',
+    fmt(r.light_level, 0) + ' lux'
+  ])
+
+  autoTable(doc, {
+    startY: 60,
+    head: [['Time', 'Temperature', 'Humidity', 'Light']],
+    body: tableData,
+    headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    styles: { fontSize: 10, cellPadding: 4 },
+  })
+
+  doc.save(filename)
+}
+
+export const downloadFullPDF = (deviceDataList, rangeLabel, filename) => {
+  if (!deviceDataList || !deviceDataList.length) return
+
+  const doc = new jsPDF()
+
+  deviceDataList.forEach((data, index) => {
+    if (index > 0) doc.addPage()
+
+    // Header
+    doc.setFontSize(20)
+    doc.setTextColor(40, 40, 40)
+    doc.text('BioScope Full Analytics Report', 14, 22)
+
+    // Meta Info
+    doc.setFontSize(11)
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Device ID: ${data.deviceId}`, 14, 32)
+    doc.text(`Time Range: ${rangeLabel}`, 14, 38)
+    doc.text(`Total Readings: ${data.rows.length}`, 14, 44)
+    doc.text(`Generated: ${fmtDateFull(new Date().toISOString())}`, 14, 50)
+
+    // Table Data mapping
+    const tableData = data.rows.map(r => [
+      fmtDateTime(r.recorded_at),
+      fmt(r.temperature, 1) + ' °C',
+      fmt(r.humidity, 1) + ' %',
+      fmt(r.light_level, 0) + ' lux'
+    ])
+
+    autoTable(doc, {
+      startY: 60,
+      head: [['Time', 'Temperature', 'Humidity', 'Light']],
+      body: tableData,
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      styles: { fontSize: 10, cellPadding: 4 },
+    })
+  })
+
+  doc.save(filename)
+}

@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { Card, SectionHeader, Toggle, Btn, Badge } from '../components/UI'
+import { useTranslation } from 'react-i18next'
 import styles from './Settings.module.css'
 
 export default function Settings({ addToast }) {
   const { user, logout, updateProfile } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
 
   const [settings, setSettings] = useState(() => {
     return user?.preferences || {
@@ -67,16 +69,16 @@ export default function Settings({ addToast }) {
   return (
     <div className={styles.page}>
       {/* General */}
-      <SectionHeader title="General" />
+      <SectionHeader title={t('settings.general')} />
       <Card className="fade-up d1">
         <div className={styles.settingRows}>
-          <SettingRow label="Dark Mode" desc="Use dark colour scheme (recommended)">
+          <SettingRow label={t('settings.darkMode')} desc={t('settings.darkModeDesc')}>
             <Toggle on={theme === 'dark'} onChange={handleThemeToggle} />
           </SettingRow>
-          <SettingRow label="Auto Refresh" desc="Automatically refresh sensor data">
+          <SettingRow label={t('settings.autoRefresh')} desc={t('settings.autoRefreshDesc')}>
             <Toggle on={settings.autoRefresh} onChange={() => set('autoRefresh', !settings.autoRefresh)} />
           </SettingRow>
-          <SettingRow label="Refresh Interval" desc="How often to poll new data">
+          <SettingRow label={t('settings.refreshInterval')} desc={t('settings.refreshIntervalDesc')}>
             <select
               className={styles.select}
               value={settings.refreshInterval}
@@ -89,14 +91,18 @@ export default function Settings({ addToast }) {
               <option value={60}>60 seconds</option>
             </select>
           </SettingRow>
-          <SettingRow label="Temperature Unit" desc="Display temperature in Celsius or Fahrenheit">
+          <SettingRow label={t('settings.temperatureUnit')} desc={t('settings.temperatureUnitDesc')}>
             <div className={styles.unitBtns}>
               <button className={`${styles.unitBtn} ${settings.tempUnit === 'C' ? styles.unitActive : ''}`} onClick={() => set('tempUnit', 'C')}>°C</button>
               <button className={`${styles.unitBtn} ${settings.tempUnit === 'F' ? styles.unitActive : ''}`} onClick={() => set('tempUnit', 'F')}>°F</button>
             </div>
           </SettingRow>
-          <SettingRow label="Language" desc="Interface language">
-            <select className={styles.select} value={settings.language} onChange={e => set('language', e.target.value)}>
+          <SettingRow label={t('settings.language')} desc={t('settings.languageDesc')}>
+            <select className={styles.select} value={settings.language} onChange={e => {
+              const lang = e.target.value;
+              set('language', lang);
+              i18n.changeLanguage(lang);
+            }}>
               <option value="en">English</option>
               <option value="ja">日本語</option>
             </select>
@@ -105,26 +111,26 @@ export default function Settings({ addToast }) {
       </Card>
 
       {/* Notifications */}
-      <SectionHeader title="Notifications" />
+      <SectionHeader title={t('settings.notifications')} />
       <Card className="fade-up d2">
         <div className={styles.settingRows}>
-          <SettingRow label="Email Alerts" desc="Receive alerts via email">
+          <SettingRow label={t('settings.emailAlerts')} desc={t('settings.emailAlertsDesc')}>
             <Toggle on={settings.emailAlerts} onChange={() => set('emailAlerts', !settings.emailAlerts)} />
           </SettingRow>
-          <SettingRow label="Push Notifications" desc="Browser push notifications">
+          <SettingRow label={t('settings.pushNotifications')} desc={t('settings.pushNotificationsDesc')}>
             <Toggle on={settings.pushAlerts} onChange={() => set('pushAlerts', !settings.pushAlerts)} />
           </SettingRow>
-          <SettingRow label="SMS Alerts" desc="Text message for critical alerts">
+          <SettingRow label={t('settings.smsAlerts')} desc={t('settings.smsAlertsDesc')}>
             <Toggle on={settings.smsAlerts} onChange={() => set('smsAlerts', !settings.smsAlerts)} />
           </SettingRow>
         </div>
       </Card>
 
       {/* Data */}
-      <SectionHeader title="Data & Privacy" />
+      <SectionHeader title={t('settings.dataPrivacy')} />
       <Card className="fade-up d3">
         <div className={styles.settingRows}>
-          <SettingRow label="Data Retention" desc="How long to keep historical data">
+          <SettingRow label={t('settings.dataRetention')} desc={t('settings.dataRetentionDesc')}>
             <select className={styles.select} value={settings.dataRetention} onChange={e => set('dataRetention', Number(e.target.value))}>
               <option value={7}>7 days</option>
               <option value={30}>30 days</option>
@@ -132,17 +138,17 @@ export default function Settings({ addToast }) {
               <option value={365}>1 year</option>
             </select>
           </SettingRow>
-          <SettingRow label="Export All Data" desc="Download your complete dataset">
-            <Btn onClick={() => addToast('Export initiated', 'info')} icon="⬇" variant="secondary">Export</Btn>
+          <SettingRow label={t('settings.exportData')} desc={t('settings.exportDataDesc')}>
+            <Btn onClick={() => addToast('Export initiated', 'info')} icon="⬇" variant="secondary">{t('settings.export')}</Btn>
           </SettingRow>
-          <SettingRow label="Delete Account" desc="Permanently remove account and data">
-            <Btn onClick={() => addToast('This action is disabled in demo', 'error')} variant="danger">Delete</Btn>
+          <SettingRow label={t('settings.deleteAccount')} desc={t('settings.deleteAccountDesc')}>
+            <Btn onClick={() => addToast('This action is disabled in demo', 'error')} variant="danger">{t('settings.delete')}</Btn>
           </SettingRow>
         </div>
       </Card>
 
       {/* Account */}
-      <SectionHeader title="Account" />
+      <SectionHeader title={t('settings.account')} />
       <Card className="fade-up d4">
         <div className={styles.accountRow}>
           <div className={styles.avatar}>
@@ -155,13 +161,13 @@ export default function Settings({ addToast }) {
           </div>
         </div>
         <div className={styles.logoutRow}>
-          <Btn onClick={handleLogout} variant="secondary" icon="🚪">Logout</Btn>
+          <Btn onClick={handleLogout} variant="secondary" icon="🚪">{t('settings.logout')}</Btn>
         </div>
       </Card>
 
       <div className={styles.saveRow}>
         <Btn onClick={save} variant="primary" icon="✓" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? t('settings.saving') : t('settings.saveSettings')}
         </Btn>
       </div>
     </div>

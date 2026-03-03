@@ -8,17 +8,15 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
 }
 
 .main {
   flex: 1;
-  overflow-y: auto;
   background: var(--bg-base);
   /* Subtle grid texture */
   background-image:
-    linear-gradient(rgba(168,245,198,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168,245,198,0.015) 1px, transparent 1px);
+    linear-gradient(rgba(168, 245, 198, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 245, 198, 0.015) 1px, transparent 1px);
   background-size: 32px 32px;
   -webkit-overflow-scrolling: touch;
 }
@@ -28,7 +26,29 @@
   .layout {
     flex-direction: row;
   }
-  
+
+  .sidebarOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 90;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
   .content {
     width: 100%;
     flex: 1;

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import styles from './Auth.module.css'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Signup({ onSignup, addToast }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,17 +26,17 @@ export default function Signup({ onSignup, addToast }) {
     const { name, email, password, confirmPassword } = formData
 
     if (!name || !email || !password || !confirmPassword) {
-      addToast?.('Please fill in all fields', 'warning')
+      addToast?.(t('auth.signup.emptyFields'), 'warning')
       return
     }
 
     if (password !== confirmPassword) {
-      addToast?.('Passwords do not match', 'error')
+      addToast?.(t('auth.signup.passwordMismatch'), 'error')
       return
     }
 
     if (password.length < 8) {
-      addToast?.('Password must be at least 8 characters', 'warning')
+      addToast?.(t('auth.signup.passwordLength'), 'warning')
       return
     }
 
@@ -43,22 +45,22 @@ export default function Signup({ onSignup, addToast }) {
       const { data, error } = await signup(email, password, name)
 
       if (error) {
-        addToast?.(error.message || 'Signup failed', 'error')
+        addToast?.(error.message || t('auth.signup.failed'), 'error')
         return
       }
 
       // If email confirmation is disabled in Supabase, user is immediately active
       // If enabled, they'll need to confirm their email first
       if (data?.user?.identities?.length === 0) {
-        addToast?.('An account with this email already exists.', 'error')
+        addToast?.(t('auth.signup.emailExists'), 'error')
         return
       }
 
-      addToast?.('Account created successfully! Please sign in.', 'success')
+      addToast?.(t('auth.signup.success'), 'success')
       if (onSignup) onSignup(data.user)
       navigate('/login')
     } catch (error) {
-      addToast?.(error.message || 'Signup failed', 'error')
+      addToast?.(error.message || t('auth.signup.failed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -69,21 +71,13 @@ export default function Signup({ onSignup, addToast }) {
       {/* Left Side - Image Panel with Description */}
       <div className={styles.signupImagePanel}>
         <div className={styles.signupImageContent}>
-          <h2 className={styles.signupTitle}>What Is BioScope?</h2>
+          <h2 className={styles.signupTitle}>{t('auth.signup.whatIsTitle')}</h2>
           <p className={styles.signupDescription}>
-            BioScope is an IoT-based environmental monitoring and control system. 
-            It lets you remotely monitor and control the physical environment inside 
-            an enclosure — like a terrarium for a gecko, a plant growing chamber, or 
-            a small facility room — using your phone or web browser from anywhere in 
-            the world.
+            {t('auth.signup.desc1')}
             <br /><br />
-            Think of it as a smart thermostat, but for a complete micro-environment: 
-            temperature, humidity, and light — all monitored in real time, with 
-            automated responses and remote manual control.
+            {t('auth.signup.desc2')}
             <br /><br />
-            Monitored. Controlled. Connected. BioScope gives you the power to create 
-            the perfect environment for your plants, pets, or projects, no matter 
-            where you are.
+            {t('auth.signup.desc3')}
           </p>
         </div>
       </div>
@@ -102,22 +96,22 @@ export default function Signup({ onSignup, addToast }) {
               <line x1="2" y1="14" x2="6" y2="14" stroke="#4caf50" strokeWidth="1.5" />
               <line x1="22" y1="14" x2="26" y2="14" stroke="#4caf50" strokeWidth="1.5" />
             </svg>
-            <h1 className={styles.authTitle}>Create Account</h1>
-            <p className={styles.authSubtitle}>Join BioScope to monitor your environment</p>
+            <h1 className={styles.authTitle}>{t('auth.signup.title')}</h1>
+            <p className={styles.authSubtitle}>{t('auth.signup.subtitle')}</p>
           </div>
 
           {/* Form */}
           <form className={styles.authForm} onSubmit={handleSubmit}>
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="name">
-                Full Name
+                {t('auth.signup.nameLabel')}
               </label>
               <input
                 id="name"
                 name="name"
                 type="text"
                 className={styles.formInput}
-                placeholder="John Doe"
+                placeholder={t('auth.signup.namePlaceholder')}
                 value={formData.name}
                 onChange={handleChange}
                 autoComplete="name"
@@ -127,14 +121,14 @@ export default function Signup({ onSignup, addToast }) {
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="email">
-                Email Address
+                {t('auth.signup.emailLabel')}
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
                 className={styles.formInput}
-                placeholder="your.email@example.com"
+                placeholder={t('auth.signup.emailPlaceholder')}
                 value={formData.email}
                 onChange={handleChange}
                 autoComplete="email"
@@ -144,14 +138,14 @@ export default function Signup({ onSignup, addToast }) {
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="password">
-                Password
+                {t('auth.signup.passwordLabel')}
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 className={styles.formInput}
-                placeholder="At least 8 characters"
+                placeholder={t('auth.signup.passwordPlaceholder')}
                 value={formData.password}
                 onChange={handleChange}
                 autoComplete="new-password"
@@ -161,14 +155,14 @@ export default function Signup({ onSignup, addToast }) {
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="confirmPassword">
-                Confirm Password
+                {t('auth.signup.confirmPasswordLabel')}
               </label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 className={styles.formInput}
-                placeholder="Re-enter your password"
+                placeholder={t('auth.signup.confirmPasswordPlaceholder')}
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 autoComplete="new-password"
@@ -185,10 +179,10 @@ export default function Signup({ onSignup, addToast }) {
                 {loading ? (
                   <span className={styles.btnLoading}>
                     <span className={styles.spinner} />
-                    Creating account...
+                    {t('auth.signup.creating')}
                   </span>
                 ) : (
-                  'Sign Up'
+                  t('auth.signup.signUpBtn')
                 )}
               </button>
             </div>
@@ -196,9 +190,9 @@ export default function Signup({ onSignup, addToast }) {
 
           {/* Login Link */}
           <div className={styles.authFooter}>
-            <span className={styles.footerText}>Already have an account?</span>
+            <span className={styles.footerText}>{t('auth.signup.hasAccount')}</span>
             <Link to="/login" className={styles.footerLink}>
-              Sign in
+              {t('auth.signup.signInLink')}
             </Link>
           </div>
         </div>

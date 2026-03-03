@@ -17,6 +17,21 @@ export const triggerControl = async (req, res, next) => {
 
     if (aErr) return res.status(404).json({ error: 'Actuator not found' })
 
+    // Find the corresponding public.users record for this auth user
+    // (Auth UUID might not directly match a record in public.users if it wasn't synced)
+    let localUserId = null;
+    if (req.user && req.user.id) {
+      const { data: localUser } = await supabase
+        .from('users')
+        .select('user_id')
+        .eq('user_id', req.user.id)
+        .single();
+
+      if (localUser) {
+        localUserId = localUser.user_id;
+      }
+    }
+
     // Insert control action record
     const { data: action, error: actionErr } = await supabase
       .from('control_actions')
@@ -29,7 +44,7 @@ export const triggerControl = async (req, res, next) => {
         previous_status: actuator.status,
         previous_value: actuator.current_value,
         reason: reason || 'Manual trigger',
-        initiated_by_user_id: req.user.id,
+        initiated_by_user_id: localUserId, // Use validated local user ID or null
         status: 'pending'
       }])
       .select()
@@ -38,10 +53,14 @@ export const triggerControl = async (req, res, next) => {
     if (actionErr) return res.status(400).json({ error: actionErr.message })
 
     // Apply the change to the actuator
-    const actuatorUpdates = { last_changed: new Date().toISOString(), changed_by_user_id: req.user.id }
-    if (action_type === 'activate')   actuatorUpdates.status = true
+    // Only set changed_by_user_id if a valid local user exists to satisfy foreign key constraint
+    const actuatorUpdates = { last_changed: new Date().toISOString() }
+    if (localUserId) {
+      actuatorUpdates.changed_by_user_id = localUserId
+    }
+    if (action_type === 'activate') actuatorUpdates.status = true
     if (action_type === 'deactivate') actuatorUpdates.status = false
-    if (action_type === 'set_value')  actuatorUpdates.current_value = new_value
+    if (action_type === 'set_value') actuatorUpdates.current_value = new_value
 
     const { error: updateErr } = await supabase
       .from('actuators')
@@ -73,7 +92,7 @@ export const getControlHistory = async (req, res, next) => {
       .order('timestamp', { ascending: false })
       .range(offset, offset + parseInt(limit) - 1)
 
-    if (device_id)   query = query.eq('device_id', device_id)
+    if (device_id) query = query.eq('device_id', device_id)
     if (actuator_id) query = query.eq('actuator_id', actuator_id)
 
     const { data, error, count } = await query

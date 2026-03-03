@@ -1,37 +1,45 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import styles from './Sidebar.module.css'
 
 const NAV = [
   {
     section: 'MONITOR',
     items: [
-      { to: '/',         label: 'Dashboard',  icon: <DashIcon /> },
-      { to: '/sensors',  label: 'Sensors',    icon: <SensorIcon /> },
-      { to: '/controls', label: 'Controls',   icon: <ControlIcon /> },
+      { to: '/', label: 'Dashboard', icon: <DashIcon /> },
+      { to: '/sensors', label: 'Sensors', icon: <SensorIcon /> },
+      { to: '/controls', label: 'Controls', icon: <ControlIcon /> },
     ]
   },
   {
     section: 'DATA',
     items: [
-      { to: '/history',  label: 'History',    icon: <HistoryIcon /> },
-      { to: '/reports',  label: 'Reports',    icon: <ReportIcon /> },
+      { to: '/history', label: 'History', icon: <HistoryIcon /> },
+      { to: '/reports', label: 'Reports', icon: <ReportIcon /> },
     ]
   },
   {
     section: 'MANAGE',
     items: [
-      { to: '/devices',  label: 'Devices',    icon: <DeviceIcon /> },
-      { to: '/alerts',   label: 'Alerts',     icon: <AlertIcon /> },
-      { to: '/settings', label: 'Settings',   icon: <SettingsIcon /> },
+      { to: '/devices', label: 'Devices', icon: <DeviceIcon /> },
+      { to: '/alerts', label: 'Alerts', icon: <AlertIcon /> },
+      { to: '/settings', label: 'Settings', icon: <SettingsIcon /> },
     ]
   }
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen, onClose }) {
+  const { t } = useTranslation()
+
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}>
+      {/* Mobile close button */}
+      <button className={styles.mobileCloseBtn} onClick={onClose}>
+        <CloseIcon />
+      </button>
+
       {/* Logo */}
-      <div className={styles.logo}>
+      <Link to="/" className={styles.logo} onClick={() => { if (mobileOpen) onClose() }}>
         <div className={styles.logoMark}>
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <circle cx="14" cy="14" r="12" stroke="var(--green)" strokeWidth="1.5" />
@@ -47,24 +55,25 @@ export default function Sidebar() {
           <span className={styles.logoName}>BioScope</span>
           <span className={styles.logoSub}>ENV · MONITOR</span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className={styles.nav}>
         {NAV.map(({ section, items }) => (
           <div key={section} className={styles.navGroup}>
-            <div className={styles.sectionLabel}>{section}</div>
+            <div className={styles.sectionLabel}>{t(`nav.${section.toLowerCase()}`)}</div>
             {items.map(({ to, label, icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={to === '/'}
+                onClick={() => { if (mobileOpen) onClose() }}
                 className={({ isActive }) =>
                   `${styles.navItem} ${isActive ? styles.active : ''}`
                 }
               >
                 <span className={styles.navIcon}>{icon}</span>
-                <span className={styles.navLabel}>{label}</span>
+                <span className={styles.navLabel}>{t(`nav.${label.toLowerCase()}`)}</span>
               </NavLink>
             ))}
           </div>
@@ -127,5 +136,12 @@ function SettingsIcon() {
   return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     <circle cx="8" cy="8" r="2.5" />
     <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.06 1.06M12.01 12.01l1.06 1.06M2.93 13.07l1.06-1.06M12.01 3.99l1.06-1.06" />
+  </svg>
+}
+
+function CloseIcon() {
+  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
   </svg>
 }

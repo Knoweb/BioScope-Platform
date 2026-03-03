@@ -45,9 +45,23 @@ export const createDevice = async (req, res, next) => {
       return res.status(400).json({ error: 'device_id, name, type and location are required' })
     }
 
+    // Must resolve the auth.users ID to the public.users user_id for the foreign key
+    const { data: dbUser, error: userErr } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('email', req.user.email)
+      .single()
+
+    if (userErr || !dbUser) {
+      return res.status(400).json({ error: 'Authenticated user not found in public users table' })
+    }
+
     const { data, error } = await supabase
       .from('devices')
-      .insert([{ device_id, name, type, location, gateway, firmware_version, ip_address, mac_address, owner_user_id: req.user.id }])
+      .insert([{
+        device_id, name, type, location, gateway, firmware_version, ip_address, mac_address,
+        owner_user_id: dbUser.user_id
+      }])
       .select()
       .single()
 

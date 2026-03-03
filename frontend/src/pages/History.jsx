@@ -2,11 +2,13 @@ import { useState, useMemo, useEffect } from 'react'
 import { useReadings, useDevices } from '../hooks'
 import { fmt, fmtDateFull, downloadCSV, downloadJSON } from '../utils'
 import { DeviceTabs, SectionHeader, Card, Badge, Btn, EmptyState, PageLoader } from '../components/UI'
+import { useTranslation } from 'react-i18next'
 import styles from './History.module.css'
 
 const PAGE_SIZE = 20
 
 export default function History({ addToast }) {
+  const { t } = useTranslation()
   const { devices, loading: devLoading } = useDevices()
   const deviceIds = useMemo(() => devices.map(d => d.device_id), [devices])
 
@@ -47,11 +49,11 @@ export default function History({ addToast }) {
 
   const handleExportCSV = () => {
     downloadCSV(filtered, `bioscope_${device}_${Date.now()}.csv`)
-    addToast(`Exported ${filtered.length} rows as CSV`, 'success')
+    addToast(t('history.exportedCsv', { count: filtered.length }), 'success')
   }
   const handleExportJSON = () => {
     downloadJSON(filtered, `bioscope_${device}_${Date.now()}.json`)
-    addToast(`Exported ${filtered.length} rows as JSON`, 'success')
+    addToast(t('history.exportedJson', { count: filtered.length }), 'success')
   }
 
   const tempColor = (v) => v > 30 ? 'red' : v < 20 ? 'amber' : 'green'
@@ -64,7 +66,7 @@ export default function History({ addToast }) {
   if (!devLoading && deviceIds.length === 0) {
     return (
       <div className={styles.page}>
-        <EmptyState icon="📋" title="No devices found" sub="History requires an active device" />
+        <EmptyState icon="📋" title={t('history.noDevices')} sub={t('history.noDevicesSub')} />
       </div>
     )
   }
@@ -79,7 +81,7 @@ export default function History({ addToast }) {
           <input
             className={styles.searchInput}
             type="text"
-            placeholder="Search readings..."
+            placeholder={t('history.searchPlaceholder')}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
           />
@@ -89,10 +91,10 @@ export default function History({ addToast }) {
             className={styles.sortBtn}
             onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
           >
-            {sortDir === 'desc' ? '↓ Newest first' : '↑ Oldest first'}
+            {sortDir === 'desc' ? t('history.newestFirst') : t('history.oldestFirst')}
           </button>
-          <Btn onClick={handleExportCSV} icon="⬇" variant="secondary">CSV</Btn>
-          <Btn onClick={handleExportJSON} icon="⬇" variant="secondary">JSON</Btn>
+          <Btn onClick={handleExportCSV} icon="⬇" variant="secondary">{t('history.csv')}</Btn>
+          <Btn onClick={handleExportJSON} icon="⬇" variant="secondary">{t('history.json')}</Btn>
         </div>
       </div>
 
@@ -101,31 +103,31 @@ export default function History({ addToast }) {
           {rdgLoading ? (
             <PageLoader />
           ) : paged.length === 0 ? (
-            <EmptyState icon="📋" title="No readings found" sub={search ? 'Try a different search term' : 'Data will appear once the device streams readings'} />
+            <EmptyState icon="📋" title={t('history.noReadings')} sub={search ? t('history.tryDifferentSearch') : t('history.dataWillAppear')} />
           ) : (
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>DEVICE</th>
-                  <th>TEMPERATURE</th>
-                  <th>HUMIDITY</th>
-                  <th>LIGHT LEVEL</th>
-                  <th>RECORDED AT</th>
+                  <th>{t('history.tableId')}</th>
+                  <th>{t('history.tableDevice')}</th>
+                  <th>{t('history.tableTemp')}</th>
+                  <th>{t('history.tableHum')}</th>
+                  <th>{t('history.tableLight')}</th>
+                  <th>{t('history.tableRecorded')}</th>
                 </tr>
               </thead>
               <tbody>
                 {paged.map((r, i) => (
-                  <tr key={r.id} className={`${styles.row} fade-in`} style={{ animationDelay: `${i * 0.02}s` }}>
-                    <td className={styles.cellId}>#{r.id}</td>
+                  <tr key={r.id || `reading-${i}`} className={`${styles.row} fade-in`} style={{ animationDelay: `${i * 0.02}s` }}>
+                    <td className={styles.cellId}>#{r.id || 'N/A'}</td>
                     <td><Badge label={r.device_id} color="cyan" /></td>
                     <td>
                       <span className={styles.val} style={{ color: 'var(--red)' }}>{fmt(r.temperature)}°C</span>
-                      <Badge label={r.temperature > 30 ? 'HIGH' : r.temperature < 20 ? 'LOW' : 'OK'} color={tempColor(r.temperature)} />
+                      <Badge label={r.temperature > 30 ? t('history.high') : r.temperature < 20 ? t('history.low') : t('history.ok')} color={tempColor(r.temperature)} />
                     </td>
                     <td>
                       <span className={styles.val} style={{ color: 'var(--cyan)' }}>{fmt(r.humidity)}%</span>
-                      <Badge label={r.humidity > 75 ? 'HIGH' : r.humidity < 30 ? 'LOW' : 'OK'} color={humColor(r.humidity)} />
+                      <Badge label={r.humidity > 75 ? t('history.high') : r.humidity < 30 ? t('history.low') : t('history.ok')} color={humColor(r.humidity)} />
                     </td>
                     <td><span className={styles.val} style={{ color: 'var(--amber)' }}>{fmt(r.light_level, 0)} lux</span></td>
                     <td className={styles.cellTime}>{fmtDateFull(r.recorded_at)}</td>
@@ -140,17 +142,17 @@ export default function History({ addToast }) {
         {!rdgLoading && filtered.length > PAGE_SIZE && (
           <div className={styles.pagination}>
             <span className={styles.paginInfo}>
-              Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+              {t('history.showing', { start: ((page - 1) * PAGE_SIZE) + 1, end: Math.min(page * PAGE_SIZE, filtered.length), total: filtered.length })}
             </span>
             <div className={styles.paginBtns}>
-              <button className={styles.paginBtn} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>← Prev</button>
+              <button className={styles.paginBtn} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{t('history.prev')}</button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const p = Math.max(1, Math.min(totalPages - 4, page - 2)) + i
                 return (
                   <button key={p} className={`${styles.paginBtn} ${p === page ? styles.paginActive : ''}`} onClick={() => setPage(p)}>{p}</button>
                 )
               })}
-              <button className={styles.paginBtn} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next →</button>
+              <button className={styles.paginBtn} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{t('history.next')}</button>
             </div>
           </div>
         )}

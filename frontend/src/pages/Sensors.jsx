@@ -3,6 +3,7 @@ import { useReadings, useChartData, useDevices } from '../hooks'
 import { fmt, fmtTime, fmtDateTime, tempStatus, humStatus } from '../utils'
 import { MetricCard, DeviceTabs, SectionHeader, Card, ChartTimeSelector, PageLoader, EmptyState } from '../components/UI'
 import { TempHumChart, LightChart } from '../components/Charts'
+import { useTranslation } from 'react-i18next'
 import styles from './Sensors.module.css'
 
 const TIME_OPTIONS = [
@@ -11,6 +12,7 @@ const TIME_OPTIONS = [
 ]
 
 export default function Sensors({ addToast }) {
+  const { t } = useTranslation()
   const { devices, loading: devLoading } = useDevices()
   const deviceIds = useMemo(() => devices.map(d => d.device_id), [devices])
 
@@ -44,7 +46,7 @@ export default function Sensors({ addToast }) {
   if (!devLoading && deviceIds.length === 0) {
     return (
       <div className={styles.page}>
-        <EmptyState icon="📉" title="No devices found" sub="Please add a device from the devices page" />
+        <EmptyState icon="📉" title={t('dashboard.noDevices')} sub={t('dashboard.noDevicesSub')} />
       </div>
     )
   }
@@ -56,47 +58,47 @@ export default function Sensors({ addToast }) {
       {/* Metric cards */}
       <div className={styles.metricGrid}>
         <MetricCard
-          label="TEMPERATURE"
+          label={t('sensors.temperature')}
           value={latestLoading || latest?.temperature == null ? null : fmt(latest.temperature)}
           unit="°C"
           icon="🌡️"
           color="var(--red)"
           delay={0.05}
           loading={latestLoading}
-          sub={latest?.temperature != null ? `Status: ${tempStatus(latest.temperature).toUpperCase()}` : null}
+          sub={latest?.temperature != null ? t('sensors.tempStatus', { status: tempStatus(latest.temperature).toUpperCase() }) : null}
         />
         <MetricCard
-          label="HUMIDITY"
+          label={t('sensors.humidity')}
           value={latestLoading || latest?.humidity == null ? null : fmt(latest.humidity)}
           unit="%"
           icon="💧"
           color="var(--cyan)"
           delay={0.10}
           loading={latestLoading}
-          sub={latest?.humidity != null ? `Status: ${humStatus(latest.humidity).toUpperCase()}` : null}
+          sub={latest?.humidity != null ? t('sensors.humStatus', { status: humStatus(latest.humidity).toUpperCase() }) : null}
         />
         <MetricCard
-          label="LIGHT LEVEL"
+          label={t('sensors.lightLevel')}
           value={latestLoading || latest?.light_level == null ? null : fmt(latest.light_level, 0)}
           unit=" lux"
           icon="☀️"
           color="var(--amber)"
           delay={0.15}
           loading={latestLoading}
-          sub={latest?.recorded_at ? `At ${fmtDateTime(latest.recorded_at)}` : null}
+          sub={latest?.recorded_at ? t('sensors.atTime', { time: fmtDateTime(latest.recorded_at) }) : null}
         />
       </div>
 
       {/* Temperature & Humidity chart */}
       <Card className={`${styles.chartCard} fade-up d4`}>
         <SectionHeader
-          title="Temperature & Humidity"
+          title={t('sensors.tempHumChart')}
           right={<ChartTimeSelector value={range} onChange={setRange} options={TIME_OPTIONS} />}
         />
         {histLoading ? (
           <PageLoader />
         ) : chartData.length === 0 ? (
-          <EmptyState icon="📈" title="No data available" sub="Readings will appear once the device starts streaming" />
+          <EmptyState icon="📈" title={t('sensors.noData')} sub={t('sensors.noDataSub')} />
         ) : (
           <TempHumChart data={chartData} />
         )}
@@ -104,11 +106,11 @@ export default function Sensors({ addToast }) {
 
       {/* Light chart */}
       <Card className={`${styles.chartCard} fade-up d5`}>
-        <SectionHeader title="Light Level" />
+        <SectionHeader title={t('sensors.lightChart')} />
         {histLoading ? (
           <PageLoader />
         ) : chartData.length === 0 ? (
-          <EmptyState icon="💡" title="No light data" />
+          <EmptyState icon="💡" title={t('sensors.noLightData')} />
         ) : (
           <LightChart data={chartData} />
         )}
@@ -117,15 +119,15 @@ export default function Sensors({ addToast }) {
       {/* Reading info */}
       {latest && (
         <Card className={`${styles.infoCard} fade-up d5`}>
-          <SectionHeader title="Latest Reading Details" />
+          <SectionHeader title={t('sensors.latestReading')} />
           <div className={styles.infoGrid}>
             {[
-              { label: 'Device ID', value: latest.device_id },
-              { label: 'Reading ID', value: latest.id || 'N/A' },
-              { label: 'Temperature', value: `${fmt(latest.temperature)} °C` },
-              { label: 'Humidity', value: `${fmt(latest.humidity)} %` },
-              { label: 'Light Level', value: `${fmt(latest.light_level, 0)} lux` },
-              { label: 'Recorded At', value: fmtDateTime(latest.recorded_at) },
+              { label: t('sensors.deviceId'), value: latest.device_id },
+              { label: t('sensors.readingId'), value: latest.id || 'N/A' },
+              { label: t('sensors.temperatureInfo'), value: `${fmt(latest.temperature)} °C` },
+              { label: t('sensors.humidityInfo'), value: `${fmt(latest.humidity)} %` },
+              { label: t('sensors.lightLevelInfo'), value: `${fmt(latest.light_level, 0)} lux` },
+              { label: t('sensors.recordedAt'), value: fmtDateTime(latest.recorded_at) },
             ].map(({ label, value }) => (
               <div key={label} className={styles.infoRow}>
                 <span className={styles.infoLabel}>{label}</span>
