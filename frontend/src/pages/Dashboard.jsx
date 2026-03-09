@@ -46,9 +46,9 @@ export default function Dashboard({ addToast }) {
       <div className={styles.deviceRow}>
         {devLoading ? (
           <div style={{ padding: 20 }}>{t('dashboard.loadingDevices')}</div>
-        ) : devices.length === 0 ? (
+        ) : devices.filter(d => d.type === 'parent').length === 0 ? (
           <EmptyState title={t('dashboard.noDevices')} icon="📉" sub={t('dashboard.noDevicesSub')} />
-        ) : devices.map((device, i) => {
+        ) : devices.filter(d => d.type === 'parent').map((device, i) => {
           const d = device.device_id
           const r = readings[d]
           const ctrl = controls[d] ?? {}
@@ -82,21 +82,41 @@ export default function Dashboard({ addToast }) {
                 </div>
               </div>
 
-              <div className={styles.actuators}>
-                {[
-                  { key: 'fan_status', label: t('dashboard.fan'), },
-                  { key: 'light_status', label: t('dashboard.lightActuator'), },
-                  { key: 'heater_status', label: t('dashboard.heater'), },
-                ].map(({ key, label }) => (
-                  <div key={key} className={styles.actuatorRow}>
-                    <span className={styles.actuatorLabel}>{label}</span>
-                    <Toggle
-                      on={!!ctrl[key]}
-                      loading={updating === `${d}.${key}`}
-                      onChange={() => handleToggle(d, key)}
-                    />
-                  </div>
-                ))}
+              <div className={styles.actuatorsGrouped}>
+                <div className={styles.actuatorSubSection}>
+                  <div className={styles.actuatorSubTitle}>Actuator 1</div>
+                  {[
+                    { key: 'act1_fan', label: 'Fan' },
+                    { key: 'act1_light', label: 'Light' },
+                    { key: 'act1_heater', label: 'Heater' },
+                  ].map(({ key, label }) => (
+                    <div key={key} className={styles.actuatorRowSmall}>
+                      <span className={styles.actuatorLabelSmall}>{label}</span>
+                      <Toggle
+                        on={!!ctrl[key]}
+                        loading={updating === `${d}.${key}`}
+                        onChange={() => handleToggle(d, key)}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.actuatorSubSection}>
+                  <div className={styles.actuatorSubTitle}>Actuator 2</div>
+                  {[
+                    { key: 'act2_fan', label: 'Fan' },
+                    { key: 'act2_light', label: 'Light' },
+                    { key: 'act2_heater', label: 'Heater' },
+                  ].map(({ key, label }) => (
+                    <div key={key} className={styles.actuatorRowSmall}>
+                      <span className={styles.actuatorLabelSmall}>{label}</span>
+                      <Toggle
+                        on={!!ctrl[key]}
+                        loading={updating === `${d}.${key}`}
+                        onChange={() => handleToggle(d, key)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {r?.recorded_at && (
@@ -136,8 +156,8 @@ export default function Dashboard({ addToast }) {
         {[
           { label: t('dashboard.totalDevices'), value: devices.length, unit: '', color: 'var(--green)' },
           { label: t('dashboard.activeAlerts'), value: alerts.length, unit: '', color: alerts.length > 0 ? 'var(--red)' : 'var(--green)' },
-          { label: t('dashboard.fansActive'), value: devices.filter(d => controls[d.device_id]?.fan_status).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
-          { label: t('dashboard.heatersActive'), value: devices.filter(d => controls[d.device_id]?.heater_status).length, unit: `/${devices.length}`, color: 'var(--amber)' },
+          { label: 'A1 Fans Active', value: devices.filter(d => controls[d.device_id]?.act1_fan).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
+          { label: 'A2 Fans Active', value: devices.filter(d => controls[d.device_id]?.act2_fan).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
         ].map((s, i) => (
           <Card key={s.label} className={`${styles.statCard} fade-up d${i + 1}`}>
             <div className={styles.statLabel}>{s.label}</div>

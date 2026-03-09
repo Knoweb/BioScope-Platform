@@ -15,7 +15,7 @@ function StatBox({ label, value, unit, color }) {
   )
 }
 
-function DeviceReport({ deviceId, addToast }) {
+function DeviceReport({ deviceId, name, addToast }) {
   const { t } = useTranslation()
   const [exportRange, setExportRange] = useState(24)
   const [exporting, setExporting] = useState(null)
@@ -37,10 +37,11 @@ function DeviceReport({ deviceId, addToast }) {
 
   const handleExport = async (format) => {
     setExporting(format)
-    addToast(`Preparing ${format} report for ${deviceId}...`, 'info')
+    addToast(`Preparing ${format} report for ${name || deviceId}...`, 'info')
     try {
+      const isParent = String(deviceId).startsWith('P')
       const sinceISO = new Date(Date.now() - exportRange * 60 * 60 * 1000).toISOString()
-      const { data: exportData, error } = await readingsAPI.getReadings(deviceId, { limit: 10000, since: sinceISO })
+      const { data: exportData, error } = await readingsAPI.getReadings(deviceId, isParent, { limit: 10000, since: sinceISO })
 
       if (error) throw error
       if (!exportData || !exportData.length) {
@@ -53,7 +54,7 @@ function DeviceReport({ deviceId, addToast }) {
 
       if (format === 'CSV') downloadCSV(exportData, filename + '.csv')
       if (format === 'JSON') downloadJSON(exportData, filename + '.json')
-      if (format === 'PDF') downloadPDF(exportData, deviceId, rangeLabel, filename + '.pdf')
+      if (format === 'PDF') downloadPDF(exportData, name || deviceId, rangeLabel, filename + '.pdf')
 
       addToast(`Successfully exported ${exportData.length} records as ${format}`, 'success')
     } catch (e) {
@@ -66,7 +67,7 @@ function DeviceReport({ deviceId, addToast }) {
   return (
     <Card className={`${styles.reportCard} fade-up`}>
       <div className={styles.reportHeader}>
-        <div className={styles.reportTitle}>{t('reports.deviceTitle', { id: deviceId })}</div>
+        <div className={styles.reportTitle}>{name || t('reports.deviceTitle', { id: deviceId })}</div>
         <div className={styles.reportMeta}>
           <Badge label={t('reports.readingsCount', { count: arr.length })} color="cyan" />
           <Badge label={t('reports.online')} color="green" />
@@ -129,6 +130,8 @@ export default function Reports({ addToast }) {
   const { devices, loading: devLoading } = useDevices()
   const [exportingFull, setExportingFull] = useState(false)
 
+  const parentDevices = devices.filter(d => d.type === 'parent')
+
   const exportAll = async () => {
     setExportingFull(true)
     addToast('Generating full multi-device report... This may take a moment', 'info')
@@ -137,10 +140,11 @@ export default function Reports({ addToast }) {
       const sinceISO = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       const deviceDataList = []
 
-      for (const d of devices) {
-        const { data: rows, error } = await readingsAPI.getReadings(d.device_id, { limit: 10000, since: sinceISO })
+      for (const d of parentDevices) {
+        const isParent = String(d.device_id).startsWith('P')
+        const { data: rows, error } = await readingsAPI.getReadings(d.device_id, isParent, { limit: 10000, since: sinceISO })
         if (!error && rows && rows.length > 0) {
-          deviceDataList.push({ deviceId: d.device_id, rows })
+          deviceDataList.push({ deviceId: d.name || d.device_id, name: d.name, rows })
         }
       }
 
@@ -167,11 +171,11 @@ export default function Reports({ addToast }) {
       <SectionHeader title={t('reports.perDeviceAnalytics')} />
       {devLoading ? (
         <div style={{ padding: 20 }}>{t('reports.loadingDevices')}</div>
-      ) : devices.length === 0 ? (
+      ) : parentDevices.length === 0 ? (
         <div style={{ padding: 20, color: 'var(--text-muted)' }}>{t('reports.noDevicesFound')}</div>
       ) : (
         <div className={styles.reportGrid}>
-          {devices.map(d => <DeviceReport key={d.device_id} deviceId={d.device_id} addToast={addToast} />)}
+          {parentDevices.map(d => <DeviceReport key={d.device_id} deviceId={d.device_id} name={d.name} addToast={addToast} />)}
         </div>
       )}
 

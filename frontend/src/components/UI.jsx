@@ -27,16 +27,21 @@ export function MetricCard({ label, value, unit, icon, color, trend, sub, loadin
 export function DeviceTabs({ devices, active, onChange }) {
   return (
     <div className={styles.deviceTabs}>
-      {devices.map(d => (
-        <button
-          key={d}
-          className={`${styles.deviceTab} ${active === d ? styles.tabActive : ''}`}
-          onClick={() => onChange(d)}
-        >
-          <span className={styles.tabDot} />
-          Device {d}
-        </button>
-      ))}
+      {devices.map(d => {
+        const isObj = typeof d === 'object'
+        const id = isObj ? d.device_id : d
+        const name = isObj ? d.name : `Device ${d}`
+        return (
+          <button
+            key={id}
+            className={`${styles.deviceTab} ${active === id ? styles.tabActive : ''}`}
+            onClick={() => onChange(id)}
+          >
+            <span className={styles.tabDot} />
+            {name}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -94,9 +99,9 @@ export function Badge({ label, color = 'green' }) {
 // ── StatusPill ─────────────────────────────────────────────────────────────
 export function StatusPill({ status }) {
   const map = {
-    normal:  { label: 'NORMAL',  cls: 'green' },
-    high:    { label: 'HIGH',    cls: 'red' },
-    low:     { label: 'LOW',     cls: 'amber' },
+    normal: { label: 'NORMAL', cls: 'green' },
+    high: { label: 'HIGH', cls: 'red' },
+    low: { label: 'LOW', cls: 'amber' },
     unknown: { label: 'UNKNOWN', cls: 'muted' },
   }
   const info = map[status] ?? map.unknown

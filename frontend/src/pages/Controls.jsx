@@ -1,40 +1,50 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useControls, useDevices, useAutomationRules } from '../hooks'
-import { DEVICES, fmtDateTime } from '../utils'
+import { fmtDateTime } from '../utils'
 import { DeviceTabs, SectionHeader, Card, Toggle, Badge, PageLoader, EmptyState, Btn } from '../components/UI'
 import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import styles from './Controls.module.css'
 
-const ACTUATORS = [
+const ACTUATOR_GROUPS = [
   {
-    key: 'fan_status',
-    i18nKey: 'fan',
-    icon: '🌀',
+    groupId: 'act1',
+    name: 'Actuator 1',
     color: 'var(--cyan)',
+    controls: [
+      { key: 'act1_fan', i18nKey: 'fan', icon: '🌀' },
+      { key: 'act1_light', i18nKey: 'light', icon: '💡' },
+      { key: 'act1_heater', i18nKey: 'heater', icon: '🔥', fallbackName: 'Heater' },
+    ]
   },
   {
-    key: 'heater_status',
-    i18nKey: 'heater',
-    icon: '🔥',
-    color: 'var(--red)',
-  },
-  {
-    key: 'light_status',
-    i18nKey: 'light',
-    icon: '💡',
+    groupId: 'act2',
+    name: 'Actuator 2',
     color: 'var(--amber)',
-  },
+    controls: [
+      { key: 'act2_fan', i18nKey: 'fan', icon: '🌀' },
+      { key: 'act2_light', i18nKey: 'light', icon: '💡' },
+      { key: 'act2_heater', i18nKey: 'heater', icon: '🔥', fallbackName: 'Heater' },
+    ]
+  }
 ]
 
 export default function Controls({ addToast }) {
   const { user } = useAuth()
   const { t } = useTranslation()
-  // Determine if the user has permission to edit automation rules
   const userRole = user?.user_metadata?.role || 'viewer'
   const isAdminOrOwner = userRole === 'admin' || userRole === 'owner' || userRole === 'operator'
 
-  const [device, setDevice] = useState('C1')
+  const { devices, loading: devLoading } = useDevices()
+  const parents = useMemo(() => devices.filter(d => d.type === 'parent'), [devices])
+  const parentIds = useMemo(() => parents.map(p => p.device_id), [parents])
+
+  const [device, setDevice] = useState('')
+
+  useEffect(() => {
+    if (parentIds.length > 0 && !device) setDevice(parentIds[0])
+  }, [parentIds, device])
+
   const { controls, loading, updating, toggle } = useControls()
   const { rules: automationRules, loading: rulesLoading, createRule, updateRule, deleteRule } = useAutomationRules(device)
 
@@ -46,7 +56,6 @@ export default function Controls({ addToast }) {
   const [savingRule, setSavingRule] = useState(false)
 
   const handleToggle = async (field) => {
-    // We can also block manual toggles if needed, but per requirements we focus on rules
     const { success, newVal, error } = await toggle(device, field)
     if (success) {
       addToast(`${field.replace('_status', '')} ${newVal ? 'activated' : 'deactivated'} on ${device}`, 'success')
@@ -96,57 +105,83 @@ export default function Controls({ addToast }) {
   }
 
   const ctrl = controls[device] ?? {}
-  const allDeviceControls = DEVICES.map(d => ({ id: d, ...controls[d] }))
+  const allDeviceControls = parents.map(d => ({ id: d.device_id, name: d.name, ...controls[d.device_id] }))
+
+  if (devLoading) {
+    return <div className={styles.page}><PageLoader /></div>
+  }
+
+  if (!devLoading && parentIds.length === 0) {
+    return (
+      <div className={styles.page}>
+        <EmptyState title="No Parent Units Found" sub="Actuators can only be controlled on parent units." />
+      </div>
+    )
+  }
 
   return (
     <div className={styles.page}>
-      <DeviceTabs devices={DEVICES} active={device} onChange={setDevice} />
+      <DeviceTabs devices={parents} active={device} onChange={setDevice} />
 
       {/* Actuator controls */}
       <SectionHeader title={t('controls.actuatorControls')} right={
         <Badge label={loading ? t('controls.loading') : t('controls.live')} color={loading ? 'muted' : 'green'} />
       } />
-      <div className={styles.controlGrid}>
-        {ACTUATORS.map((a, i) => {
-          const isOn = !!ctrl[a.key]
-          const isBusy = updating === `${device}.${a.key}`
-          const actTrans = t(`controls.actuators.${a.i18nKey}`, { returnObjects: true })
-          return (
-            <Card key={a.key} className={`${styles.controlCard} fade-up d${i + 1}`} style={{ '--a-color': a.color }}>
-              <div className={styles.cardHeader}>
-                <span className={styles.actIcon} style={{ filter: isOn ? 'none' : 'grayscale(1)' }}>{a.icon}</span>
-                <Badge label={isOn ? t('controls.active') : t('controls.inactive')} color={isOn ? 'green' : 'muted'} />
-              </div>
-              <div className={styles.actName}>{actTrans.label}</div>
-              <div className={styles.actDesc}>{actTrans.desc}</div>
-              <div className={styles.actAuto}>{actTrans.auto}</div>
-              <div className={styles.controlRow}>
-                <Toggle on={isOn} loading={isBusy} onChange={() => handleToggle(a.key)} label={isOn ? t('controls.on') : t('controls.off')} />
-              </div>
-              <div className={styles.statusBar} style={{ background: isOn ? a.color : 'var(--border-subtle)' }} />
-            </Card>
-          )
-        })}
+      <div className={styles.controlGridGrouped}>
+        {ACTUATOR_GROUPS.map((g, i) => (
+          <Card key={g.groupId} className={`${styles.controlCardGrouped} fade-up d${i + 1}`} style={{ '--a-color': g.color }}>
+            <div className={styles.groupHeader}>
+              <div className={styles.actGroupName}>{g.name}</div>
+            </div>
+            <div className={styles.groupControls}>
+              {g.controls.map(c => {
+                const isOn = !!ctrl[c.key]
+                const isBusy = updating === `${device}.${c.key}`
+                const actTrans = t(`controls.actuators.${c.i18nKey}`, { returnObjects: true, defaultValue: { label: c.fallbackName || c.i18nKey } })
+                const labelText = typeof actTrans === 'object' ? actTrans.label : (c.fallbackName || c.i18nKey)
+                return (
+                  <div key={c.key} className={styles.subControlItem} style={{ borderLeftColor: isOn ? g.color : 'transparent' }}>
+                    <div className={styles.subControlInfo}>
+                      <span className={styles.subActIcon} style={{ filter: isOn ? 'none' : 'grayscale(1)' }}>{c.icon}</span>
+                      <div className={styles.subActText}>
+                        <div className={styles.subActName}>{labelText}</div>
+                        <div className={styles.subActStatus} style={{ color: isOn ? 'var(--green)' : 'var(--text-muted)' }}>
+                          {isOn ? t('controls.active') : t('controls.inactive')}
+                        </div>
+                      </div>
+                    </div>
+                    <Toggle on={isOn} loading={isBusy} onChange={() => handleToggle(c.key)} label={isOn ? t('controls.on') : t('controls.off')} />
+                  </div>
+                )
+              })}
+            </div>
+            <div className={styles.statusBar} style={{ background: g.color }} />
+          </Card>
+        ))}
       </div>
 
       {/* All-device overview */}
       <SectionHeader title={t('controls.allDevicesOverview')} />
       <Card className="fade-up d4">
         <div className={styles.overviewTable}>
-          <div className={styles.overviewHeader}>
+          <div className={`${styles.overviewHeader} ${styles.overviewHeaderWide}`}>
             <span>{t('controls.deviceCol')}</span>
-            <span>{t('controls.fanCol')}</span>
-            <span>{t('controls.heaterCol')}</span>
-            <span>{t('controls.lightCol')}</span>
+            <span>Actuator 1</span>
+            <span>Actuator 2</span>
           </div>
           {allDeviceControls.map(d => (
-            <div key={d.id} className={styles.overviewRow}>
+            <div key={d.id} className={`${styles.overviewRow} ${styles.overviewRowWide}`}>
               <span className={styles.overviewDevice}>{t('dashboard.device')} {d.id}</span>
-              {['fan_status', 'heater_status', 'light_status'].map(k => (
-                <span key={k}>
-                  <Badge label={d[k] ? t('controls.on') : t('controls.off')} color={d[k] ? 'green' : 'muted'} />
-                </span>
-              ))}
+              <div className={styles.overviewSubGroup}>
+                <Badge label={`Fan: ${d.act1_fan ? t('controls.on') : t('controls.off')}`} color={d.act1_fan ? 'green' : 'muted'} />
+                <Badge label={`Light: ${d.act1_light ? t('controls.on') : t('controls.off')}`} color={d.act1_light ? 'green' : 'muted'} />
+                <Badge label={`Heater: ${d.act1_heater ? t('controls.on') : t('controls.off')}`} color={d.act1_heater ? 'red' : 'muted'} />
+              </div>
+              <div className={styles.overviewSubGroup}>
+                <Badge label={`Fan: ${d.act2_fan ? t('controls.on') : t('controls.off')}`} color={d.act2_fan ? 'green' : 'muted'} />
+                <Badge label={`Light: ${d.act2_light ? t('controls.on') : t('controls.off')}`} color={d.act2_light ? 'green' : 'muted'} />
+                <Badge label={`Heater: ${d.act2_heater ? t('controls.on') : t('controls.off')}`} color={d.act2_heater ? 'red' : 'muted'} />
+              </div>
             </div>
           ))}
         </div>

@@ -1,43 +1,28 @@
 import { useState } from 'react'
-import { DEVICES, fmtDateTime } from '../utils'
-import { Card, SectionHeader, Badge, Btn } from '../components/UI'
+import { fmtDateTime } from '../utils'
+import { Card, SectionHeader, Badge, Btn, EmptyState, PageLoader } from '../components/UI'
+import { useDevices } from '../hooks'
+import { useTranslation } from 'react-i18next'
 import styles from './Devices.module.css'
 
-const DEVICE_INFO = {
-  C1: {
-    name:       'Enclosure Monitor Alpha',
-    type:       'Environmental Sensor + Actuator Hub',
-    sensors:    ['Temperature (NTC)', 'Humidity (DHT22)', 'Light (LDR)'],
-    actuators:  ['Fan (PWM)', 'Heater (Relay)', 'LED Light (PWM)'],
-    gateway:    'WiFi Gateway v2.1',
-    location:   'Zone A — Rack 1',
-    added:      '2025-01-10T09:00:00Z',
-    firmware:   '2.4.1',
-    ip:         '192.168.1.101',
-  },
-  C2: {
-    name:       'Enclosure Monitor Beta',
-    type:       'Environmental Sensor + Actuator Hub',
-    sensors:    ['Temperature (NTC)', 'Humidity (DHT22)', 'Light (LDR)'],
-    actuators:  ['Fan (PWM)', 'Heater (Relay)', 'LED Light (PWM)'],
-    gateway:    'WiFi Gateway v2.1',
-    location:   'Zone A — Rack 2',
-    added:      '2025-01-15T14:30:00Z',
-    firmware:   '2.4.1',
-    ip:         '192.168.1.102',
-  }
-}
-
 export default function Devices({ addToast }) {
+  const { t } = useTranslation()
+  const { devices, loading: devLoading } = useDevices()
   const [showAdd, setShowAdd] = useState(false)
+  const [addType, setAddType] = useState('parent')
   const [newId, setNewId] = useState('')
+
+  const parents = devices.filter(d => d.type === 'parent')
+  const children = devices.filter(d => d.type === 'child')
 
   const handleAdd = () => {
     if (!newId.trim()) { addToast('Device ID cannot be empty', 'warning'); return }
-    addToast(`Device registration pending for: ${newId}`, 'info')
+    addToast(`Registration pending for ${addType === 'parent' ? 'Parent Unit' : 'Child Unit'}: ${newId}`, 'info')
     setNewId('')
     setShowAdd(false)
   }
+
+  if (devLoading) return <div className={styles.page}><PageLoader /></div>
 
   return (
     <div className={styles.page}>
@@ -49,71 +34,90 @@ export default function Devices({ addToast }) {
         <Card className={`${styles.addCard} fade-up`}>
           <SectionHeader title="Register New Device" />
           <div className={styles.addForm}>
+            <div style={{ marginBottom: 16 }}>
+              <label>
+                <input type="radio" checked={addType === 'parent'} onChange={() => setAddType('parent')} /> Parent Unit
+              </label>
+              <label style={{ marginLeft: 16 }}>
+                <input type="radio" checked={addType === 'child'} onChange={() => setAddType('child')} /> Child Unit
+              </label>
+            </div>
+
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Device ID</label>
+              <label className={styles.inputLabel}>Device Unit ID</label>
               <input
                 className={styles.input}
-                placeholder="e.g. C3"
+                placeholder={addType === 'parent' ? "e.g. P1" : "e.g. C1"}
                 value={newId}
                 onChange={e => setNewId(e.target.value.toUpperCase())}
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
               />
             </div>
+
             <div className={styles.addActions}>
-              <Btn onClick={handleAdd} variant="primary">Register</Btn>
+              <Btn onClick={handleAdd} variant="primary">Register {addType === 'parent' ? 'Parent' : 'Child'}</Btn>
               <Btn onClick={() => setShowAdd(false)} variant="secondary">Cancel</Btn>
             </div>
           </div>
-          <div className={styles.addHint}>💡 Scan the QR code on your device to get its ID, or enter it manually.</div>
+          <div className={styles.addHint}>💡 Enter ID to register device to the backend API.</div>
         </Card>
       )}
 
-      <SectionHeader title={`Registered Devices (${DEVICES.length})`} />
+      {/* Parent Units Section */}
+      <SectionHeader title={`Parent Units (${parents.length})`} />
       <div className={styles.devGrid}>
-        {DEVICES.map((d, i) => {
-          const info = DEVICE_INFO[d]
-          return (
-            <Card key={d} className={`${styles.devCard} fade-up d${i+1}`}>
-              <div className={styles.devHeader}>
-                <div className={styles.devId}>{d}</div>
-                <Badge label="ONLINE" color="green" />
-              </div>
-              <div className={styles.devName}>{info.name}</div>
-              <div className={styles.devType}>{info.type}</div>
+        {parents.length === 0 ? <EmptyState title="No Parent Units found" /> : parents.map((d, i) => (
+          <Card key={d.device_id} className={`${styles.devCard} fade-up d${i + 1}`}>
+            <div className={styles.devHeader}>
+              <div className={styles.devId}>{d.device_id}</div>
+              <Badge label={d.status === 'offline' ? 'OFFLINE' : 'ONLINE'} color={d.status === 'offline' ? 'red' : 'green'} />
+            </div>
+            <div className={styles.devName}>{d.name}</div>
 
-              <div className={styles.divider} />
+            <div className={styles.divider} />
 
-              <div className={styles.infoRows}>
-                <InfoRow label="LOCATION"  value={info.location} />
-                <InfoRow label="GATEWAY"   value={info.gateway} />
-                <InfoRow label="FIRMWARE"  value={info.firmware} />
-                <InfoRow label="IP"        value={info.ip} />
-                <InfoRow label="ADDED"     value={fmtDateTime(info.added)} />
-              </div>
+            <div className={styles.infoRows}>
+              <InfoRow label="LOCATION" value={d.location || 'N/A'} />
+              <InfoRow label="GATEWAY" value={d.gateway || 'N/A'} />
+              <InfoRow label="FIRMWARE" value={d.firmware || 'N/A'} />
+              <InfoRow label="IP TYPE" value={d.ip_type || 'N/A'} />
+              <InfoRow label="ADDED" value={fmtDateTime(d.created_at)} />
+            </div>
 
-              <div className={styles.divider} />
+            <div className={styles.devActions} style={{ marginTop: 'auto', paddingTop: '16px' }}>
+              <Btn onClick={() => addToast(`Pinging ${d.device_id}...`, 'info')} variant="secondary">Ping</Btn>
+              <Btn onClick={() => addToast(`Remove ${d.device_id}? (disabled in demo)`, 'error')} variant="danger">Remove</Btn>
+            </div>
+          </Card>
+        ))}
+      </div>
 
-              <div className={styles.componentSection}>
-                <div className={styles.compLabel}>SENSORS</div>
-                <div className={styles.compList}>
-                  {info.sensors.map(s => <Badge key={s} label={s} color="cyan" />)}
-                </div>
-              </div>
-              <div className={styles.componentSection}>
-                <div className={styles.compLabel}>ACTUATORS</div>
-                <div className={styles.compList}>
-                  {info.actuators.map(a => <Badge key={a} label={a} color="amber" />)}
-                </div>
-              </div>
+      {/* Child Units Section */}
+      <SectionHeader title={`Child Units (${children.length})`} style={{ marginTop: 32 }} />
+      <div className={styles.devGrid}>
+        {children.length === 0 ? <EmptyState title="No Child Units found" /> : children.map((d, i) => (
+          <Card key={d.device_id} className={`${styles.devCard} fade-up d${i + 1}`}>
+            <div className={styles.devHeader}>
+              <div className={styles.devId}>{d.device_id}</div>
+              <Badge label={d.status === 'offline' ? 'OFFLINE' : 'ONLINE'} color={d.status === 'offline' ? 'red' : 'green'} />
+            </div>
+            <div className={styles.devName}>{d.name}</div>
 
-              <div className={styles.devActions}>
-                <Btn onClick={() => addToast(`Pinging ${d}...`, 'info')} variant="secondary">Ping</Btn>
-                <Btn onClick={() => addToast(`${d} restart scheduled`, 'warning')} variant="secondary">Restart</Btn>
-                <Btn onClick={() => addToast(`Remove ${d}? (disabled in demo)`, 'error')} variant="danger">Remove</Btn>
-              </div>
-            </Card>
-          )
-        })}
+            <div className={styles.divider} />
+
+            <div className={styles.infoRows}>
+              <InfoRow label="PARENT UNIT" value={d.parent_unit_id} />
+              <InfoRow label="PRIORITY" value={d.priority || 'N/A'} />
+              <InfoRow label="LOCATION" value={d.location || 'N/A'} />
+              <InfoRow label="ADDED" value={fmtDateTime(d.created_at)} />
+            </div>
+
+            <div className={styles.devActions} style={{ marginTop: 'auto', paddingTop: '16px' }}>
+              <Btn onClick={() => addToast(`Pinging ${d.device_id}...`, 'info')} variant="secondary">Ping</Btn>
+              <Btn onClick={() => addToast(`Remove ${d.device_id}? (disabled in demo)`, 'error')} variant="danger">Remove</Btn>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   )

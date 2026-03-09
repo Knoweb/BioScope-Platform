@@ -10,7 +10,9 @@ const PAGE_SIZE = 20
 export default function History({ addToast }) {
   const { t } = useTranslation()
   const { devices, loading: devLoading } = useDevices()
-  const deviceIds = useMemo(() => devices.map(d => d.device_id), [devices])
+
+  const childDevices = useMemo(() => devices.filter(d => d.type === 'child'), [devices])
+  const deviceIds = useMemo(() => childDevices.map(d => d.device_id), [childDevices])
 
   const [device, setDevice] = useState('')
   const [page, setPage] = useState(1)
@@ -73,7 +75,7 @@ export default function History({ addToast }) {
 
   return (
     <div className={styles.page}>
-      <DeviceTabs devices={deviceIds} active={device} onChange={d => { setDevice(d); setPage(1) }} />
+      <DeviceTabs devices={childDevices} active={device} onChange={d => { setDevice(d); setPage(1) }} />
 
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
