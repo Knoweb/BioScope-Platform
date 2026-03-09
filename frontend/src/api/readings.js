@@ -4,9 +4,10 @@ import { api } from '../lib/api'
 export const readingsAPI = {
 
   // Get paginated readings
-  getReadings: async (deviceId, params = {}) => {
+  getReadings: async (id, isParent = false, params = {}) => {
     try {
-      const query = new URLSearchParams({ device_id: deviceId, ...params }).toString()
+      const typeParam = isParent ? { parent_id: id, ...params } : { device_id: id, ...params }
+      const query = new URLSearchParams(typeParam).toString()
       const data = await api.get(`/readings?${query}`)
       return { data: data.data, total: data.total, error: null }
     } catch (error) {
@@ -14,10 +15,11 @@ export const readingsAPI = {
     }
   },
 
-  // Get latest reading for a device
-  getLatestReading: async (deviceId) => {
+  // Get latest reading for a device or parent
+  getLatestReading: async (id, isParent = false) => {
     try {
-      const data = await api.get(`/readings/latest?device_id=${deviceId}`)
+      const typeParam = isParent ? `parent_id=${id}` : `device_id=${id}`
+      const data = await api.get(`/readings/latest?${typeParam}`)
       return { data: data.data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -25,9 +27,10 @@ export const readingsAPI = {
   },
 
   // Get stats (avg, min, max) for a device
-  getStats: async (deviceId, hours = 24) => {
+  getStats: async (id, isParent = false, hours = 24) => {
     try {
-      const data = await api.get(`/readings/stats?device_id=${deviceId}&hours=${hours}`)
+      const typeParam = isParent ? `parent_id=${id}` : `device_id=${id}`
+      const data = await api.get(`/readings/stats?${typeParam}&hours=${hours}`)
       return { data: data.data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -35,9 +38,10 @@ export const readingsAPI = {
   },
 
   // Get chart data (time series)
-  getChartData: async (deviceId, hours = 24) => {
+  getChartData: async (id, isParent = false, hours = 24) => {
     try {
-      const data = await api.get(`/readings/chart?device_id=${deviceId}&hours=${hours}`)
+      const typeParam = isParent ? `parent_id=${id}` : `device_id=${id}`
+      const data = await api.get(`/readings/chart?${typeParam}&hours=${hours}`)
       return { data: data.data, error: null }
     } catch (error) {
       return { data: [], error }

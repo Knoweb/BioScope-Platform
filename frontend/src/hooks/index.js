@@ -42,13 +42,14 @@ export function useReadings(deviceId, limit = 1, interval = 15000) {
       setLoading(false)
       return
     }
+    const isParent = String(deviceId).startsWith('P')
     try {
       if (limit === 1) {
-        const { data: latest, error: err } = await readingsAPI.getLatestReading(deviceId)
+        const { data: latest, error: err } = await readingsAPI.getLatestReading(deviceId, isParent)
         if (err) throw err
         setData(latest)
       } else {
-        const { data: list, error: err } = await readingsAPI.getReadings(deviceId, { limit })
+        const { data: list, error: err } = await readingsAPI.getReadings(deviceId, isParent, { limit })
         if (err) throw err
         setData(list ?? [])
       }
@@ -116,9 +117,12 @@ export function useControls() {
         // Backend `GET /api/devices` just returns devices. But wait, `GET /api/devices/:id/summary` has it.
         // Or if the backend returns actuators in an array, we can map them.
         map[d.device_id] = {
-          fan_status: false,
-          heater_status: false,
-          light_status: false
+          act1_fan: false,
+          act1_light: false,
+          act1_heater: false,
+          act2_fan: false,
+          act2_light: false,
+          act2_heater: false
         }
       })
 
@@ -133,9 +137,14 @@ export function useControls() {
 
       actuators.forEach(act => {
         if (!map[act.device_id]) map[act.device_id] = {}
-        const key = act.name.toLowerCase().includes('fan') ? 'fan_status' :
-          act.name.toLowerCase().includes('heater') ? 'heater_status' :
-            act.name.toLowerCase().includes('light') ? 'light_status' : null
+        let key = null
+        const name = act.name.toLowerCase()
+        if (name.includes('actuator 1 fan')) key = 'act1_fan'
+        else if (name.includes('actuator 1 light')) key = 'act1_light'
+        else if (name.includes('actuator 1 heater')) key = 'act1_heater'
+        else if (name.includes('actuator 2 fan')) key = 'act2_fan'
+        else if (name.includes('actuator 2 light')) key = 'act2_light'
+        else if (name.includes('actuator 2 heater')) key = 'act2_heater'
         if (key) {
           map[act.device_id][key] = act.status
         }
@@ -158,9 +167,14 @@ export function useControls() {
       .channel('public:actuators')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'actuators' }, (payload) => {
         const act = payload.new
-        const key = act.name.toLowerCase().includes('fan') ? 'fan_status' :
-          act.name.toLowerCase().includes('heater') ? 'heater_status' :
-            act.name.toLowerCase().includes('light') ? 'light_status' : null
+        let key = null
+        const name = act.name.toLowerCase()
+        if (name.includes('actuator 1 fan')) key = 'act1_fan'
+        else if (name.includes('actuator 1 light')) key = 'act1_light'
+        else if (name.includes('actuator 1 heater')) key = 'act1_heater'
+        else if (name.includes('actuator 2 fan')) key = 'act2_fan'
+        else if (name.includes('actuator 2 light')) key = 'act2_light'
+        else if (name.includes('actuator 2 heater')) key = 'act2_heater'
 
         if (key) {
           setControls(prev => ({
@@ -181,9 +195,12 @@ export function useControls() {
   const toggle = useCallback(async (deviceId, field) => {
     const key = `${deviceId}.${field}`
     const currentVal = controls[deviceId]?.[field]
-    const actuatorName = field === 'fan_status' ? 'Fan' :
-      field === 'heater_status' ? 'Heater' :
-        field === 'light_status' ? 'LED Light' : ''
+    const actuatorName = field === 'act1_fan' ? 'Actuator 1 Fan' :
+      field === 'act1_light' ? 'Actuator 1 Light' :
+        field === 'act1_heater' ? 'Actuator 1 Heater' :
+          field === 'act2_fan' ? 'Actuator 2 Fan' :
+            field === 'act2_light' ? 'Actuator 2 Light' :
+              field === 'act2_heater' ? 'Actuator 2 Heater' : ''
 
     setUpdating(key)
     try {
@@ -258,7 +275,8 @@ export function useDashboardReadings(deviceIds, interval = 15000) {
     try {
       const results = {}
       await Promise.all(deviceIds.map(async id => {
-        const { data: latest } = await readingsAPI.getLatestReading(id)
+        const isParent = id.startsWith('P')
+        const { data: latest } = await readingsAPI.getLatestReading(id, isParent)
         results[id] = latest
       }))
       setData(results)
@@ -306,9 +324,10 @@ export function useChartData(deviceId, range = 'hour', interval = 30000) {
       return
     }
     setLoading(true)
+    const isParent = String(deviceId).startsWith('P')
     try {
       const hours = range === 'hour' ? 1 : range === 'day' ? 24 : 1
-      const { data: chartData, error: err } = await readingsAPI.getChartData(deviceId, hours)
+      const { data: chartData, error: err } = await readingsAPI.getChartData(deviceId, isParent, hours)
       if (err) throw err
       setData(chartData || [])
       setError(null)
