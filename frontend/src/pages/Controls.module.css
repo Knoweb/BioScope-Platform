@@ -287,3 +287,27 @@
     padding: 12px 0;
   }
 }
+
+@media (max-width: 480px) {
+  .ruleRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ruleCondition {
+    font-size: 13px;
+  }
+
+  .subControlItem {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .controlGridGrouped {
+    gap: 12px;
+  }
+
+  .actGroupName {
+    font-size: 16px;
+  }
+}
