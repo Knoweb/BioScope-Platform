@@ -3,8 +3,21 @@ import { supabase } from '../config/supabase.js'
 // GET /api/readings?device_id=C1&limit=50&since=2025-01-01
 export const getReadings = async (req, res, next) => {
   try {
-    const { device_id, sensor_id, since, until, limit = 100, page = 1 } = req.query
-    if (!device_id) return res.status(400).json({ error: 'device_id is required' })
+    let { device_id, parent_id, sensor_id, since, until, limit = 100, page = 1 } = req.query
+    if (!device_id && !parent_id) return res.status(400).json({ error: 'device_id or parent_id is required' })
+
+    if (parent_id) {
+      const { data: child, error: childErr } = await supabase
+        .from('child_units')
+        .select('unit_id')
+        .eq('parent_unit_id', parent_id)
+        .order('priority', { ascending: true })
+        .limit(1)
+        .single()
+      if (!childErr && child) device_id = child.unit_id
+    }
+
+    if (!device_id) return res.json({ data: [], total: 0, page: parseInt(page), limit: parseInt(limit) })
 
     const offset = (page - 1) * limit
 
@@ -25,12 +38,37 @@ export const getReadings = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// GET /api/readings/latest?device_id=C1
+// GET /api/readings/latest
 export const getLatestReading = async (req, res, next) => {
   try {
-    const { device_id } = req.query
-    if (!device_id) return res.status(400).json({ error: 'device_id is required' })
+    const { device_id, parent_id } = req.query
+    if (!device_id && !parent_id) return res.status(400).json({ error: 'device_id or parent_id is required' })
 
+    if (parent_id) {
+      // Find the highest priority child unit for this parent
+      const { data: child, error: childErr } = await supabase
+        .from('child_units')
+        .select('unit_id')
+        .eq('parent_unit_id', parent_id)
+        .order('priority', { ascending: true })
+        .limit(1)
+        .single()
+
+      if (childErr || !child) return res.json({ data: null })
+
+      // Get its reading
+      const { data, error } = await supabase
+        .from('readings')
+        .select('*')
+        .eq('device_id', child.unit_id)
+        .order('recorded_at', { ascending: false })
+        .limit(1)
+
+      if (error) return res.status(400).json({ error: error.message })
+      return res.json({ data: data && data.length > 0 ? data[0] : null })
+    }
+
+    // Normal direct device ID lookup
     const { data, error } = await supabase
       .from('readings')
       .select('*')
@@ -47,8 +85,21 @@ export const getLatestReading = async (req, res, next) => {
 // GET /api/readings/stats?device_id=C1&hours=24
 export const getReadingStats = async (req, res, next) => {
   try {
-    const { device_id, hours = 24 } = req.query
-    if (!device_id) return res.status(400).json({ error: 'device_id is required' })
+    let { device_id, parent_id, hours = 24 } = req.query
+    if (!device_id && !parent_id) return res.status(400).json({ error: 'device_id or parent_id is required' })
+
+    if (parent_id) {
+      const { data: child, error: childErr } = await supabase
+        .from('child_units')
+        .select('unit_id')
+        .eq('parent_unit_id', parent_id)
+        .order('priority', { ascending: true })
+        .limit(1)
+        .single()
+      if (!childErr && child) device_id = child.unit_id
+    }
+
+    if (!device_id) return res.json({ data: null, message: 'No internal device matching parent parameter' })
 
     const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
 
