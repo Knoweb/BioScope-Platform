@@ -156,8 +156,8 @@ export default function Dashboard({ addToast }) {
         {[
           { label: t('dashboard.totalDevices'), value: devices.length, unit: '', color: 'var(--green)' },
           { label: t('dashboard.activeAlerts'), value: alerts.length, unit: '', color: alerts.length > 0 ? 'var(--red)' : 'var(--green)' },
-          { label: 'A1 Fans Active', value: devices.filter(d => controls[d.device_id]?.act1_fan).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
-          { label: 'A2 Fans Active', value: devices.filter(d => controls[d.device_id]?.act2_fan).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
+          { label: 'A1 Active', value: devices.filter(d => controls[d.device_id]?.act1_fan || controls[d.device_id]?.act1_light || controls[d.device_id]?.act1_heater).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
+          { label: 'A2 Active', value: devices.filter(d => controls[d.device_id]?.act2_fan || controls[d.device_id]?.act2_light || controls[d.device_id]?.act2_heater).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
         ].map((s, i) => (
           <Card key={s.label} className={`${styles.statCard} fade-up d${i + 1}`}>
             <div className={styles.statLabel}>{s.label}</div>

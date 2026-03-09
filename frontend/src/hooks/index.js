@@ -455,3 +455,37 @@ export function useAutomationRules(deviceId) {
 
   return { rules, loading, createRule, updateRule, deleteRule, refetch: fetch_ }
 }
+
+// ── useControlHistory ──────────────────────────────────────────────────────
+export function useControlHistory(deviceId, limit = 50) {
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch_ = useCallback(async () => {
+    if (!deviceId) return setLoading(false)
+    try {
+      const { data } = await controlsAPI.getHistory({ device_id: deviceId, limit })
+      setHistory(data || [])
+    } finally {
+      setLoading(false)
+    }
+  }, [deviceId, limit])
+
+  useEffect(() => {
+    fetch_()
+
+    const realtime = getRealtimeClient()
+    const channel = realtime
+      .channel('public:control_history')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'control_history' }, (payload) => {
+        if (payload.new.device_id === deviceId) {
+          setHistory(prev => [payload.new, ...prev].slice(0, limit))
+        }
+      })
+      .subscribe()
+
+    return () => realtime.removeChannel(channel)
+  }, [fetch_, deviceId, limit])
+
+  return { history, loading, refetch: fetch_ }
+}

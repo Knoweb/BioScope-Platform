@@ -6,9 +6,10 @@
 }
 
 .deviceRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
   margin-bottom: 24px;
 }
 
@@ -16,11 +17,13 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
-  padding: 20px 22px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   transition: border-color 0.2s;
+  width: 100%;
+  max-width: 800px;
 }
 
 .deviceCard:hover {
@@ -78,7 +81,11 @@
 .actuatorSubSection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  background: var(--bg-surface, rgba(0, 0, 0, 0.02));
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
 }
 
 .actuatorSubTitle {

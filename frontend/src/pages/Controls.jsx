@@ -6,6 +6,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import styles from './Controls.module.css'
 
+// Format `act1_fan:on` -> "A1 Fan → ON"
+const formatAction = (action) => {
+  if (!action) return action
+  const [key, cmd] = action.split(':')
+  const labels = { act1_fan: 'A1 Fan', act1_light: 'A1 Light', act1_heater: 'A1 Heater', act2_fan: 'A2 Fan', act2_light: 'A2 Light', act2_heater: 'A2 Heater' }
+  return `${labels[key] || key} → ${(cmd || '').toUpperCase()}`
+}
+
 const ACTUATOR_GROUPS = [
   {
     groupId: 'act1',
@@ -51,8 +59,7 @@ export default function Controls({ addToast }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState(null)
   const [editValue, setEditValue] = useState('')
-  const [editPrefix, setEditPrefix] = useState('')
-  const [editSuffix, setEditSuffix] = useState('')
+  const [editPriority, setEditPriority] = useState(10)
   const [savingRule, setSavingRule] = useState(false)
 
   const handleToggle = async (field) => {
@@ -66,16 +73,8 @@ export default function Controls({ addToast }) {
 
   const openModal = (rule) => {
     setEditingRule(rule)
-    const match = rule.trigger_condition.match(/^(.*?)([<>=]+)\s*(\d+(\.\d+)?)(.*)$/)
-    if (match) {
-      setEditPrefix(match[1].trim() + ' ' + match[2].trim())
-      setEditValue(match[3])
-      setEditSuffix(match[5].trim())
-    } else {
-      setEditPrefix(rule.trigger_condition)
-      setEditValue('')
-      setEditSuffix('')
-    }
+    setEditValue(rule.trigger_condition)
+    setEditPriority(rule.priority || 10)
     setModalOpen(true)
   }
 
@@ -89,12 +88,8 @@ export default function Controls({ addToast }) {
     setSavingRule(true)
     try {
       if (editingRule) {
-        let newCond = editingRule.trigger_condition
-        if (editValue !== '') {
-          newCond = `${editPrefix} ${editValue}${editSuffix ? ' ' + editSuffix : ''}`
-        }
-        await updateRule(editingRule.rule_id, { trigger_condition: newCond })
-        addToast('Automation rule threshold updated successfully', 'success')
+        await updateRule(editingRule.rule_id, { trigger_condition: editValue, priority: editPriority })
+        addToast('Automation rule updated successfully', 'success')
       }
       closeRuleModal()
     } catch (err) {
@@ -204,8 +199,8 @@ export default function Controls({ addToast }) {
                 <div className={styles.ruleAccent} style={{ background: r.is_active ? 'var(--cyan)' : 'var(--border-subtle)' }} />
                 <div className={styles.ruleContent}>
                   <div className={styles.ruleCondition}>{t('controls.if')} {r.trigger_condition}</div>
-                  <div className={styles.ruleAction}>{t('controls.then')} {r.action}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{t('controls.name', { name: r.name })}</div>
+                  <div className={styles.ruleAction}>{t('controls.then')} {formatAction(r.action)}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{r.name}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   {isAdminOrOwner ? (
@@ -247,11 +242,11 @@ export default function Controls({ addToast }) {
             <form onSubmit={handleSaveRule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('controls.triggerCondition')}</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-main)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-                  <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{editPrefix}</span>
-                  <input required type="number" step="any" value={editValue} onChange={e => setEditValue(e.target.value)} style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--text-muted)', background: 'var(--bg-card)', color: 'var(--text-main)', textAlign: 'center', fontSize: '1rem' }} />
-                  <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{editSuffix}</span>
-                </div>
+                <input required type="text" value={editValue} onChange={e => setEditValue(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.95rem' }} placeholder="e.g. temperature > 30 AND humidity < 50" />
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Priority (1 is highest)</label>
+                <input required type="number" min="1" max="100" value={editPriority} onChange={e => setEditPriority(Number(e.target.value))} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.95rem' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                 <Btn variant="secondary" onClick={closeRuleModal} type="button">{t('controls.cancel')}</Btn>
