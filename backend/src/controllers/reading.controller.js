@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { automationService } from '../services/automation.service.js'
 
 // GET /api/readings?device_id=C1&limit=50&since=2025-01-01
 export const getReadings = async (req, res, next) => {
@@ -156,6 +157,14 @@ export const createReading = async (req, res, next) => {
 
     const { data, error } = await supabase.from('readings').insert(readings).select()
     if (error) return res.status(400).json({ error: error.message })
+
+    // Fire off the automation evaluation asynchronously in the background
+    // for every recorded parent device reading that was just inserted
+    if (data && data.length > 0) {
+      Promise.all(data.map(reading => {
+        return automationService.processReadings(reading.device_id, reading)
+      })).catch(err => console.error('[Automation Background Error]', err));
+    }
 
     return res.status(201).json({ data, inserted: data.length })
   } catch (err) { next(err) }

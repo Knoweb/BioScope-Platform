@@ -11,7 +11,7 @@ export const triggerControl = async (req, res, next) => {
     // Fetch current actuator state for audit
     const { data: actuator, error: aErr } = await supabase
       .from('actuators')
-      .select('status, current_value')
+      .select('name, status, current_value')
       .eq('actuator_id', actuator_id)
       .single()
 
@@ -74,6 +74,15 @@ export const triggerControl = async (req, res, next) => {
       .update({ status: finalStatus, error_message: updateErr?.message || null })
       .eq('action_id', action.action_id)
 
+    // Log to new control_history table
+    await supabase.from('control_history').insert([{
+      device_id,
+      actuator: actuator.name || actuator_id,
+      command: action_type === 'activate' ? 'ON' : 'OFF',
+      triggered_by: 'Manual',
+      status: finalStatus
+    }]);
+
     if (updateErr) return res.status(500).json({ error: 'Failed to apply control', detail: updateErr.message })
 
     return res.status(201).json({ data: { ...action, status: finalStatus } })
@@ -87,8 +96,8 @@ export const getControlHistory = async (req, res, next) => {
     const offset = (page - 1) * limit
 
     let query = supabase
-      .from('control_actions')
-      .select('*, actuators(name, type)', { count: 'exact' })
+      .from('control_history')
+      .select('*', { count: 'exact' })
       .order('timestamp', { ascending: false })
       .range(offset, offset + parseInt(limit) - 1)
 
