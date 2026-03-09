@@ -12,8 +12,8 @@ INSERT INTO public.users ("user_id", "email", "password_hash", "name", "phone", 
 
 -- Data for Name: devices; Type: TABLE DATA
 INSERT INTO public.devices ("device_id", "name", "type", "description", "location", "gateway", "firmware_version", "ip_address", "mac_address", "status", "owner_user_id", "added_date", "last_seen", "deleted_at") VALUES
-('C2', 'Enclosure Monitor Beta', 'Environmental Sensor + Actuator Hub', NULL, 'Zone A - Rack 2', 'BLE Gateway v1.0', '2.4.1', '192.168.1.102', NULL, 'online', 'ab97fd38-c7e8-486a-8a37-a3f39c7e98d6', '2026-02-23T04:20:40.772318+00:00', '2026-02-26T13:27:37+00:00', NULL),
-('C1', 'Enclosure Monitor Alpha', 'Environmental Sensor + Actuator Hub', NULL, 'Zone A - Rack 1', 'BLE Gateway v1.0', '2.4.1', '192.168.1.101', NULL, 'online', 'ab97fd38-c7e8-486a-8a37-a3f39c7e98d6', '2026-02-23T04:20:40.772318+00:00', '2026-02-26T13:31:28+00:00', NULL),
+('C2', 'Parent Unit 2', 'Environmental Sensor + Actuator Hub', NULL, 'Zone A - Rack 2', 'BLE Gateway v1.0', '2.4.1', '192.168.1.102', NULL, 'online', 'ab97fd38-c7e8-486a-8a37-a3f39c7e98d6', '2026-02-23T04:20:40.772318+00:00', '2026-02-26T13:27:37+00:00', NULL),
+('C1', 'Parent Unit 1', 'Environmental Sensor + Actuator Hub', NULL, 'Zone A - Rack 1', 'BLE Gateway v1.0', '2.4.1', '192.168.1.101', NULL, 'online', 'ab97fd38-c7e8-486a-8a37-a3f39c7e98d6', '2026-02-23T04:20:40.772318+00:00', '2026-02-26T13:31:28+00:00', NULL),
 ('QWDQW', 'dwqdwq', 'Standard Monitor', NULL, 'wqdw', NULL, NULL, NULL, NULL, 'offline', 'ab97fd38-c7e8-486a-8a37-a3f39c7e98d6', '2026-02-26T10:38:48.862458+00:00', NULL, '2026-02-26T10:43:20.141+00:00');
 
 -- Data for Name: sensor_types; Type: TABLE DATA
