@@ -1,0 +1,14 @@
+[
+  {
+    "device_id": "C1",
+    "name": "Child Unit 1",
+    "type": "Environmental Sensor + Actuator Hub",
+    "parent_id": null
+  },
+  {
+    "device_id": "C2",
+    "name": "Child Unit 2",
+    "type": "Environmental Sensor + Actuator Hub",
+    "parent_id": null
+  }
+]

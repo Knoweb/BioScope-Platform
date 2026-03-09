@@ -1,0 +1,200 @@
+Found tables: parent_devices, vw_latest_readings, user_preferences, alert_rules, device_settings, sensor_types, audit_log, devices, vw_device_summary, automation_rules, users, readings, sensors, vw_active_alerts, control_actions, alerts, actuators
+
+Table [devices] columns: device_id, name, type, description, location, gateway, firmware_version, ip_address, mac_address, status, owner_user_id, added_date, last_seen, deleted_at, parent_id
+{
+  "device_id": {
+    "description": "Note:\nThis is a Primary Key.<pk/>",
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "name": {
+    "format": "character varying",
+    "maxLength": 100,
+    "type": "string"
+  },
+  "type": {
+    "format": "character varying",
+    "maxLength": 50,
+    "type": "string"
+  },
+  "description": {
+    "format": "text",
+    "type": "string"
+  },
+  "location": {
+    "format": "character varying",
+    "maxLength": 100,
+    "type": "string"
+  },
+  "gateway": {
+    "format": "character varying",
+    "maxLength": 50,
+    "type": "string"
+  },
+  "firmware_version": {
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "ip_address": {
+    "format": "character varying",
+    "maxLength": 45,
+    "type": "string"
+  },
+  "mac_address": {
+    "format": "character varying",
+    "maxLength": 17,
+    "type": "string"
+  },
+  "status": {
+    "default": "offline",
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "owner_user_id": {
+    "description": "Note:\nThis is a Foreign Key to `users.user_id`.<fk table='users' column='user_id'/>",
+    "format": "uuid",
+    "type": "string"
+  },
+  "added_date": {
+    "default": "CURRENT_TIMESTAMP",
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "last_seen": {
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "deleted_at": {
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "parent_id": {
+    "description": "Note:\nThis is a Foreign Key to `parent_devices.device_id`.<fk table='parent_devices' column='device_id'/>",
+    "format": "character varying",
+    "type": "string"
+  }
+}
+
+Table [parent_units] does NOT exist in public schema.
+
+Table [child_units] does NOT exist in public schema.
+
+Table [parent_devices] columns: device_id, name, type, description, location, gateway, firmware_version, ip_address, mac_address, status, owner_user_id, added_date, last_seen, deleted_at
+{
+  "device_id": {
+    "description": "Note:\nThis is a Primary Key.<pk/>",
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "name": {
+    "format": "character varying",
+    "maxLength": 100,
+    "type": "string"
+  },
+  "type": {
+    "format": "character varying",
+    "maxLength": 50,
+    "type": "string"
+  },
+  "description": {
+    "format": "text",
+    "type": "string"
+  },
+  "location": {
+    "format": "character varying",
+    "maxLength": 100,
+    "type": "string"
+  },
+  "gateway": {
+    "format": "character varying",
+    "maxLength": 50,
+    "type": "string"
+  },
+  "firmware_version": {
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "ip_address": {
+    "format": "character varying",
+    "maxLength": 45,
+    "type": "string"
+  },
+  "mac_address": {
+    "format": "character varying",
+    "maxLength": 17,
+    "type": "string"
+  },
+  "status": {
+    "default": "offline",
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "owner_user_id": {
+    "description": "Note:\nThis is a Foreign Key to `users.user_id`.<fk table='users' column='user_id'/>",
+    "format": "uuid",
+    "type": "string"
+  },
+  "added_date": {
+    "default": "CURRENT_TIMESTAMP",
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "last_seen": {
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "deleted_at": {
+    "format": "timestamp with time zone",
+    "type": "string"
+  }
+}
+
+Table [readings] columns: reading_id, device_id, sensor_id, temperature, humidity, light_level, recorded_at, raw_data, priority_level
+{
+  "reading_id": {
+    "description": "Note:\nThis is a Primary Key.<pk/>",
+    "format": "bigint",
+    "type": "integer"
+  },
+  "device_id": {
+    "description": "Note:\nThis is a Foreign Key to `devices.device_id`.<fk table='devices' column='device_id'/>",
+    "format": "character varying",
+    "maxLength": 20,
+    "type": "string"
+  },
+  "sensor_id": {
+    "description": "Note:\nThis is a Foreign Key to `sensors.sensor_id`.<fk table='sensors' column='sensor_id'/>",
+    "format": "uuid",
+    "type": "string"
+  },
+  "temperature": {
+    "format": "numeric",
+    "type": "number"
+  },
+  "humidity": {
+    "format": "numeric",
+    "type": "number"
+  },
+  "light_level": {
+    "format": "numeric",
+    "type": "number"
+  },
+  "recorded_at": {
+    "default": "CURRENT_TIMESTAMP",
+    "format": "timestamp with time zone",
+    "type": "string"
+  },
+  "raw_data": {
+    "format": "jsonb"
+  },
+  "priority_level": {
+    "format": "numeric",
+    "type": "number"
+  }
+}
