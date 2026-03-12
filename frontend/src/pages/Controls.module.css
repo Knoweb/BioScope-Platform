@@ -202,43 +202,19 @@
 .ruleList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .ruleRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 0;
+  gap: 4px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .ruleRow:last-child {
   border-bottom: none;
-}
-
-.ruleAccent {
-  width: 3px;
-  height: 36px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.ruleContent {
-  flex: 1;
-}
-
-.ruleCondition {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-}
-
-.ruleAction {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 2px;
 }
 
 @media (max-width: 900px) {
