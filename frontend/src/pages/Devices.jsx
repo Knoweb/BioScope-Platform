@@ -39,12 +39,12 @@ export default function Devices({ addToast }) {
       const payload = {
         device_id: newDev.id,
         name: newDev.name,
-        type: addMode === 'parent' ? 'Parent Unit' : newDev.type || 'Child Unit',
+        type: addMode === 'parent' ? 'parent' : 'child',
         location: newDev.location,
         status: 'offline'
       }
       if (addMode === 'child' && newDev.parent_id) {
-        payload.parent_id = newDev.parent_id
+        payload.parent_unit_id = newDev.parent_id
       }
 
       const res = await api.post('/devices', payload)

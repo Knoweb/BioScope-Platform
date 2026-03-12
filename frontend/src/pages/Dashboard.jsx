@@ -1,9 +1,11 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDevices, useDashboardReadings, useControls } from '../hooks'
 import { fmt, fmtDateTime, tempStatus, humStatus } from '../utils'
 import { MetricCard, Card, SectionHeader, Badge, StatusPill, Toggle, EmptyState } from '../components/UI'
 import { MultiDeviceChart } from '../components/Charts'
 import { useTranslation } from 'react-i18next'
+import { api } from '../lib/api'
 import styles from './Dashboard.module.css'
 
 const POLL = 15000
@@ -12,7 +14,7 @@ export default function Dashboard({ addToast }) {
   const { t } = useTranslation()
 
   // Fetch devices
-  const { devices, loading: devLoading } = useDevices()
+  const { devices, loading: devLoading, updateDeviceMode } = useDevices()
   const deviceIds = useMemo(() => devices.map(d => d.device_id), [devices])
 
   // Fetch latest reading for all populated devices
@@ -23,10 +25,22 @@ export default function Dashboard({ addToast }) {
 
   const loading = devLoading || rdgLoading
 
+  const navigate = useNavigate()
+
+  // Fetch slot assignments for parent devices
+  const [slotMap, setSlotMap] = useState({})
+  useEffect(() => {
+    devices.filter(d => d.type === 'parent').forEach(d => {
+      api.get(`/devices/${d.device_id}/slots`).then(r => {
+        if (r.data?.data) setSlotMap(p => ({ ...p, [d.device_id]: r.data.data }))
+      }).catch(() => { })
+    })
+  }, [devices])
+
   const handleToggle = async (deviceId, field) => {
     const { success, newVal, error } = await toggle(deviceId, field)
-    if (success) addToast(`${deviceId} ${field.replace('_', ' ')} turned ${newVal ? 'ON' : 'OFF'}`, 'success')
-    else addToast(`Failed to update ${field}: ${error}`, 'error')
+    if (success) addToast(`${field.charAt(0).toUpperCase() + field.slice(1)} turned ${newVal ? 'ON' : 'OFF'}`, 'success')
+    else addToast(error || `Failed to update ${field}`, 'error')
   }
 
   // Build alerts
@@ -59,63 +73,90 @@ export default function Dashboard({ addToast }) {
                 <Badge label={device.status === 'offline' ? t('dashboard.offline') : t('dashboard.online')} color={device.status === 'offline' ? 'red' : 'green'} />
               </div>
 
-              <div className={styles.miniMetrics}>
-                <div className={styles.miniMetric}>
-                  <span className={styles.miniLabel}>{t('dashboard.temp')}</span>
-                  <span className={styles.miniVal} style={{ color: 'var(--red)' }}>
-                    {loading ? '—' : r?.temperature != null ? `${fmt(r.temperature)}°C` : '—'}
-                  </span>
-                  {r && <StatusPill status={tempStatus(r.temperature)} t={t} />}
+              <div className={styles.deviceCardBody}>
+                <div className={styles.metricsColumn}>
+                  <div className={styles.miniMetrics}>
+                    <div className={`${styles.metricTile} ${styles.metricTileTemp}`}>
+                      <div className={styles.metricTileHeader}><span className={styles.metricTileIcon}>🌡️</span> {t('dashboard.temp')}</div>
+                      <div className={styles.metricTileVal}>
+                        {loading ? '—' : r?.temperature != null ? `${fmt(r.temperature)}°C` : '—'}
+                      </div>
+                      {r && <StatusPill status={tempStatus(r.temperature)} t={t} />}
+                    </div>
+                    <div className={`${styles.metricTile} ${styles.metricTileHum}`}>
+                      <div className={styles.metricTileHeader}><span className={styles.metricTileIcon}>💧</span> {t('dashboard.humidity')}</div>
+                      <div className={styles.metricTileVal}>
+                        {loading ? '—' : r?.humidity != null ? `${fmt(r.humidity)}%` : '—'}
+                      </div>
+                      {r && <StatusPill status={humStatus(r.humidity)} t={t} />}
+                    </div>
+                    <div className={`${styles.metricTile} ${styles.metricTileLight}`}>
+                      <div className={styles.metricTileHeader}><span className={styles.metricTileIcon}>☀️</span> {t('dashboard.light')}</div>
+                      <div className={styles.metricTileVal}>
+                        {loading ? '—' : r?.light_level != null ? `${fmt(r.light_level, 0)} lux` : '—'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.miniMetric}>
-                  <span className={styles.miniLabel}>{t('dashboard.humidity')}</span>
-                  <span className={styles.miniVal} style={{ color: 'var(--cyan)' }}>
-                    {loading ? '—' : r?.humidity != null ? `${fmt(r.humidity)}%` : '—'}
-                  </span>
-                  {r && <StatusPill status={humStatus(r.humidity)} t={t} />}
-                </div>
-                <div className={styles.miniMetric}>
-                  <span className={styles.miniLabel}>{t('dashboard.light')}</span>
-                  <span className={styles.miniVal} style={{ color: 'var(--amber)' }}>
-                    {loading ? '—' : r?.light_level != null ? `${fmt(r.light_level, 0)} lux` : '—'}
-                  </span>
-                </div>
-              </div>
 
-              <div className={styles.actuatorsGrouped}>
-                <div className={styles.actuatorSubSection}>
-                  <div className={styles.actuatorSubTitle}>Actuator 1</div>
-                  {[
-                    { key: 'act1_fan', label: 'Fan' },
-                    { key: 'act1_light', label: 'Light' },
-                    { key: 'act1_heater', label: 'Heater' },
-                  ].map(({ key, label }) => (
-                    <div key={key} className={styles.actuatorRowSmall}>
-                      <span className={styles.actuatorLabelSmall}>{label}</span>
-                      <Toggle
-                        on={!!ctrl[key]}
-                        loading={updating === `${d}.${key}`}
-                        onChange={() => handleToggle(d, key)}
-                      />
+                {/* Two Slot Status Tiles (read-only — click to go to Controls) */}
+                <div className={styles.actuatorsColumn}>
+                  <div className={styles.modeSwitchContainer}>
+                    <div className={styles.modeSwitchLabel}>
+                      <span>⚙️</span> Control Mode
+                      <Badge label={device.control_mode === 'manual' ? 'MANUAL' : 'AUTO'} color={device.control_mode === 'manual' ? 'amber' : 'green'} />
                     </div>
-                  ))}
-                </div>
-                <div className={styles.actuatorSubSection}>
-                  <div className={styles.actuatorSubTitle}>Actuator 2</div>
-                  {[
-                    { key: 'act2_fan', label: 'Fan' },
-                    { key: 'act2_light', label: 'Light' },
-                    { key: 'act2_heater', label: 'Heater' },
-                  ].map(({ key, label }) => (
-                    <div key={key} className={styles.actuatorRowSmall}>
-                      <span className={styles.actuatorLabelSmall}>{label}</span>
-                      <Toggle
-                        on={!!ctrl[key]}
-                        loading={updating === `${d}.${key}`}
-                        onChange={() => handleToggle(d, key)}
-                      />
+                    <Toggle
+                      on={device.control_mode === 'manual'}
+                      onChange={async () => {
+                        const newMode = device.control_mode === 'manual' ? 'auto' : 'manual'
+                        const { success, error } = await updateDeviceMode(d, newMode)
+                        if (success) addToast(`Switched to ${newMode.toUpperCase()}`, 'success')
+                        else addToast(`Failed: ${error}`, 'error')
+                      }}
+                      label="Override"
+                    />
+                  </div>
+
+                  <div className={styles.actuatorSubSection}>
+                    <div className={styles.actuatorSubTitle}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Actuator Slots</span>
+                      <button onClick={() => navigate('/controls')}
+                        style={{ fontSize: '0.75rem', color: 'var(--cyan)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                        Manage →
+                      </button>
                     </div>
-                  ))}
+                    <div className={styles.actuatorTilesGrid}>
+                      {[1, 2].map(slotNum => {
+                        const slotKey = `slot_${slotNum}_device`
+                        const devSlots = slotMap[d] || {}
+                        const assigned = devSlots[slotKey] || (slotNum === 1 ? 'fan' : 'light')
+                        const ICONS = { fan: '🌀', heater: '🔥', light: '💡' }
+                        const COLORS = { fan: 'var(--cyan)', heater: 'var(--red)', light: 'var(--amber)' }
+                        const isOn = !!ctrl[assigned]
+                        const color = COLORS[assigned] || 'var(--text-muted)'
+                        return (
+                          <div key={slotNum}
+                            className={`${styles.actuatorTile} ${isOn ? styles.active : ''}`}
+                            onClick={() => navigate('/controls')}
+                            style={{ cursor: 'pointer', borderTop: `2px solid ${isOn ? color : 'var(--border-subtle)'}` }}
+                          >
+                            <div className={styles.actuatorTileHeader}>
+                              <span className={styles.actuatorTileIcon}>{ICONS[assigned]}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Slot {slotNum}</span>
+                            </div>
+                            <div className={styles.actuatorTileInfo}>
+                              <div className={styles.actuatorTileName} style={{ textTransform: 'capitalize' }}>{assigned}</div>
+                              <div className={styles.actuatorTileStatus} style={{ color: isOn ? color : 'var(--text-muted)' }}>
+                                {isOn ? 'ON' : 'OFF'}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -156,8 +197,12 @@ export default function Dashboard({ addToast }) {
         {[
           { label: t('dashboard.totalDevices'), value: devices.length, unit: '', color: 'var(--green)' },
           { label: t('dashboard.activeAlerts'), value: alerts.length, unit: '', color: alerts.length > 0 ? 'var(--red)' : 'var(--green)' },
-          { label: 'A1 Active', value: devices.filter(d => controls[d.device_id]?.act1_fan || controls[d.device_id]?.act1_light || controls[d.device_id]?.act1_heater).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
-          { label: 'A2 Active', value: devices.filter(d => controls[d.device_id]?.act2_fan || controls[d.device_id]?.act2_light || controls[d.device_id]?.act2_heater).length, unit: `/${devices.length}`, color: 'var(--cyan)' },
+          {
+            label: 'Slots Active', value: devices.filter(d => {
+              const c = controls[d.device_id] || {}; return c.fan || c.heater || c.light
+            }).length, unit: `/${devices.filter(d => d.type === 'parent').length}`, color: 'var(--cyan)'
+          },
+          { label: 'Fan ON', value: devices.filter(d => controls[d.device_id]?.fan).length, unit: '', color: 'var(--cyan)' },
         ].map((s, i) => (
           <Card key={s.label} className={`${styles.statCard} fade-up d${i + 1}`}>
             <div className={styles.statLabel}>{s.label}</div>

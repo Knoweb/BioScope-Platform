@@ -1,33 +1,53 @@
 .page {
-  padding: 24px 28px;
+  padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 24px;
 }
 
 .deviceRow {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
+  flex-direction: column;
+  gap: 32px;
   margin-bottom: 24px;
 }
 
 .deviceCard {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--r-lg);
-  padding: 24px 28px;
+  border-radius: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  transition: border-color 0.2s;
+  gap: 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
-  max-width: 800px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+
+.deviceCardBody {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.metricsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.actuatorsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .deviceCard:hover {
   border-color: var(--border-bright);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
 }
 
 .deviceCardHeader {
@@ -37,84 +57,187 @@
 }
 
 .deviceId {
-  font-size: 20px;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  color: var(--text-primary);
-}
-
-.miniMetrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.miniMetric {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.miniLabel {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  letter-spacing: 2px;
-}
-
-.miniVal {
   font-size: 24px;
   font-weight: 800;
   font-family: var(--font-mono);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.miniMetrics {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.metricTile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.metricTileTemp {
+  background: rgba(255, 82, 82, 0.05);
+  border-color: rgba(255, 82, 82, 0.1);
+}
+
+.metricTileHum {
+  background: rgba(0, 210, 255, 0.05);
+  border-color: rgba(0, 210, 255, 0.1);
+}
+
+.metricTileLight {
+  background: rgba(255, 193, 7, 0.05);
+  border-color: rgba(255, 193, 7, 0.1);
+}
+
+.metricTileHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.metricTileIcon {
+  font-size: 18px;
+}
+
+.metricTileVal {
+  font-size: 32px;
+  font-weight: 800;
+  font-family: var(--font-mono);
   line-height: 1;
-  margin-bottom: 4px;
+  color: var(--text-main);
 }
 
 .actuatorsGrouped {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   border-top: 1px solid var(--border-subtle);
-  padding-top: 14px;
+  padding-top: 24px;
+}
+
+.modeSwitchContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+}
+
+.modeSwitchLabel {
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .actuatorSubSection {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: var(--bg-surface, rgba(0, 0, 0, 0.02));
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle);
+  gap: 16px;
 }
 
 .actuatorSubTitle {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--text-main);
   font-family: var(--font-mono);
   letter-spacing: 1px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 4px;
 }
 
-.actuatorRowSmall {
+.actuatorTilesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.actuatorTile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
+  min-height: 130px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.actuatorLabelSmall {
+.actuatorTile:hover {
+  border-color: var(--border-bright);
+}
+
+.actuatorTile.active {
+  background: rgba(0, 210, 255, 0.08);
+  border-color: var(--cyan);
+}
+
+.actuatorTileIcon {
+  font-size: 28px;
+  filter: grayscale(1);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.actuatorTile.active .actuatorTileIcon {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.actuatorTileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.actuatorTileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.actuatorTileName {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+.actuatorTileStatus {
   font-size: 13px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
   font-weight: 500;
-  color: var(--text-secondary);
+}
+
+.actuatorTile.active .actuatorTileStatus {
+  color: var(--cyan);
+  font-weight: 700;
 }
 
 .lastUpdate {
-  font-size: 12px;
+  font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-dim);
+  text-align: right;
+  margin-top: -8px;
 }
 
 /* Alerts */
@@ -179,91 +302,87 @@
 .statsRow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
   margin-top: 0;
   margin-bottom: 8px;
 }
 
 .statCard {
-  padding: 16px 18px !important;
+  padding: 20px 24px !important;
+  border-radius: 20px !important;
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
 }
 
 .statValue {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 800;
   font-family: var(--font-mono);
   line-height: 1;
 }
 
+.statUnit {
+  font-size: 18px;
+  font-weight: 500;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+
 /* Mobile Responsive */
-@media (max-width: 968px) {
-  .page {
-    padding: 16px;
+@media (max-width: 1100px) {
+  .deviceCardBody {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .deviceRow {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
+  .miniMetrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 968px) {
+  .page {
+    padding: 20px;
   }
 
   .statsRow {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 
   .statValue {
-    font-size: 28px;
+    font-size: 32px;
   }
 }
 
 @media (max-width: 640px) {
   .page {
-    padding: 12px;
-  }
-
-  .actuatorsGrouped {
-    grid-template-columns: 1fr;
+    padding: 16px;
   }
 
   .miniMetrics {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 12px;
   }
 
-  .miniVal {
-    font-size: 20px;
+  .actuatorTilesGrid {
+    grid-template-columns: 1fr;
   }
 
   .statsRow {
     grid-template-columns: 1fr;
   }
 
-  .deviceId {
-    font-size: 16px;
-  }
-}
-
-.statUnit {
-  font-size: 16px;
-  font-weight: 400;
-  opacity: 0.6;
-}
-
-@media (max-width: 900px) {
-  .deviceRow {
-    grid-template-columns: 1fr;
-  }
-
-  .statsRow {
-    grid-template-columns: repeat(2, 1fr);
+  .deviceCard {
+    padding: 20px;
   }
 }
