@@ -7,6 +7,7 @@ export const authAPI = {
 
   // Sign in → saves token to localStorage
   signIn: async (email, password) => {
+
     try {
       const data = await api.post('/auth/signin', { email, password })
       if (data.session?.access_token) {
@@ -49,6 +50,10 @@ export const authAPI = {
       const data = await api.get('/auth/me')
       return { user: data.user, error: null }
     } catch (error) {
+      // 401 on startup is expected (stale/expired token) — not a real error
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+        return { user: null, error: null }
+      }
       return { user: null, error }
     }
   },
