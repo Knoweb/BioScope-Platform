@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { automationService } from '../services/automation.service.js'
 
 // GET /api/automation?device_id=C1
 export const getAutomationRules = async (req, res, next) => {
@@ -86,5 +87,17 @@ export const deleteAutomationRule = async (req, res, next) => {
 
     if (error) return res.status(400).json({ error: error.message })
     return res.status(204).send()
+  } catch (err) { next(err) }
+}
+
+// POST /api/automation/evaluate/:device_id
+export const evaluateDevice = async (req, res, next) => {
+  try {
+    const { device_id } = req.params
+    const result = await automationService.evaluate(device_id)
+    if (!result) {
+      return res.json({ message: 'Evaluation skipped (manual mode or no reading)', skipped: true })
+    }
+    return res.json({ data: result })
   } catch (err) { next(err) }
 }

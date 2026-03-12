@@ -8,14 +8,47 @@ export const triggerControl = async (req, res, next) => {
       return res.status(400).json({ error: 'device_id, actuator_id and action_type are required' })
     }
 
-    // Fetch current actuator state for audit
-    const { data: actuator, error: aErr } = await supabase
+    // Fetch all current actuators for this device to check conflicts and find the requested one
+    const { data: allActuators, error: aErr } = await supabase
       .from('actuators')
-      .select('name, status, current_value')
-      .eq('actuator_id', actuator_id)
-      .single()
+      .select('actuator_id, name, status, current_value')
+      .eq('device_id', device_id)
 
-    if (aErr) return res.status(404).json({ error: 'Actuator not found' })
+    if (aErr || !allActuators || allActuators.length === 0) return res.status(404).json({ error: 'Device actuators not found' })
+
+    const actuator = allActuators.find(a => a.actuator_id === actuator_id)
+    if (!actuator) return res.status(404).json({ error: 'Actuator not found' })
+
+    // ── Conflict checks before activating ──────────────────────────────────
+    if (action_type === 'activate') {
+      const nameLower = actuator.name.toLowerCase()
+      const isFan = nameLower.includes('fan')
+      const isHeater = nameLower.includes('heat')
+
+      // Fan ↔ Heater: mutually exclusive (temperature regulation)
+      if (isFan || isHeater) {
+        const oppositeType = isFan ? 'heat' : 'fan'
+        const conflict = allActuators.find(a =>
+          a.actuator_id !== actuator_id &&
+          a.status === true &&
+          a.name.toLowerCase().includes(oppositeType)
+        )
+        if (conflict) {
+          return res.status(409).json({
+            error: `Cannot activate ${actuator.name} — ${conflict.name} is already ON. Fan and Heater cannot run simultaneously.`
+          })
+        }
+      }
+
+      // Max 2 actuators active at once (2 physical relay ports)
+      const activeCount = allActuators.filter(a => a.actuator_id !== actuator_id && a.status === true).length
+      if (activeCount >= 2) {
+        return res.status(409).json({
+          error: 'Maximum 2 actuators can be active at once. Please turn off another actuator first.'
+        })
+      }
+    }
+
 
     // Find the corresponding public.users record for this auth user
     // (Auth UUID might not directly match a record in public.users if it wasn't synced)
@@ -73,6 +106,30 @@ export const triggerControl = async (req, res, next) => {
       .from('control_actions')
       .update({ status: finalStatus, error_message: updateErr?.message || null })
       .eq('action_id', action.action_id)
+
+    // After successful toggle, save current logical device states (fan/heater/light)
+    // so the automation engine can correctly restore dead-band state on the next cycle
+    if (!updateErr) {
+      const { data: allActs } = await supabase
+        .from('actuators')
+        .select('name, status')
+        .eq('device_id', device_id)
+        .is('deleted_at', null)
+
+      if (allActs) {
+        const logicalStates = { fan_state: 'off', heater_state: 'off', light_state: 'off' }
+        for (const a of allActs) {
+          const n = (a.name || '').toLowerCase()
+          if (n.includes('fan')) logicalStates.fan_state = a.status ? 'on' : 'off'
+          else if (n.includes('heat')) logicalStates.heater_state = a.status ? 'on' : 'off'
+          else if (n.includes('light') || n.includes('led')) logicalStates.light_state = a.status ? 'on' : 'off'
+        }
+        await supabase
+          .from('control_actions')
+          .update(logicalStates)
+          .eq('action_id', action.action_id)
+      }
+    }
 
     // Log to new control_history table
     await supabase.from('control_history').insert([{

@@ -159,10 +159,19 @@ export const createReading = async (req, res, next) => {
     if (error) return res.status(400).json({ error: error.message })
 
     // Fire off the automation evaluation asynchronously in the background
-    // for every recorded parent device reading that was just inserted
+    // for every recorded reading. Since rules are set on Parent Units (e.g. P1), 
+    // we must resolve the reading's device_id (e.g. C1) back to its parent.
     if (data && data.length > 0) {
-      Promise.all(data.map(reading => {
-        return automationService.processReadings(reading.device_id, reading)
+      Promise.all(data.map(async (reading) => {
+        // Find the parent for this child device
+        const { data: cw } = await supabase
+          .from('child_units')
+          .select('parent_unit_id')
+          .eq('unit_id', reading.device_id)
+          .single();
+
+        const targetDeviceId = cw?.parent_unit_id || reading.device_id;
+        return automationService.processReadings(targetDeviceId, reading);
       })).catch(err => console.error('[Automation Background Error]', err));
     }
 

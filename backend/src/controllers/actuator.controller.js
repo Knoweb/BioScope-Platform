@@ -56,7 +56,7 @@ export const createActuator = async (req, res, next) => {
 // PATCH /api/actuators/:id
 export const updateActuator = async (req, res, next) => {
   try {
-    const allowed = ['name', 'description', 'status', 'current_value', 'is_active', 'auto_control_enabled', 'min_value', 'max_value']
+    const allowed = ['name', 'description', 'status', 'current_value', 'is_active', 'auto_control_enabled', 'min_value', 'max_value', 'actuator_slot']
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)))
 
     // Track who changed it

@@ -1,161 +1,224 @@
 import { supabase } from '../config/supabase.js';
 
 /**
- * Service to evaluate automation rules against live sensor data and physical actuators.
+ * Evaluates a simple condition string like "temperature > 30" or
+ * "light_level < 1000" against a sensor reading object.
  */
+function evaluateCondition(conditionString, reading) {
+    if (!conditionString || !reading) return false;
+    try {
+        let parsed = conditionString.toLowerCase();
+        const metrics = ['temperature', 'humidity', 'light_level', 'soil_moisture'];
+        for (const m of metrics) {
+            if (parsed.includes(m)) {
+                const val = Number(reading[m]);
+                if (isNaN(val)) return false;
+                parsed = parsed.split(m).join(val);
+            }
+        }
+        parsed = parsed.replace(/and/g, '&&').replace(/or/g, '||');
+        if (/[a-zA-Z]/.test(parsed)) return false;
+        return Boolean(new Function(`return ${parsed}`)());
+    } catch (e) {
+        console.error('[AutoEngine] evaluateCondition error:', conditionString, e.message);
+        return false;
+    }
+}
+
 class AutomationService {
     constructor() {
-        this.evaluating = false;
-    }
-
-    // Safe logic evaluator for expressions like "temperature > 30 AND humidity < 50"
-    evaluateCondition(conditionString, readingsData) {
-        if (!conditionString) return false;
-
-        // Simplistic parser. E.g. "temperature > 30" -> splits to ["temperature", ">", "30"]
-        // Handle AND/OR logic if it exists
-        try {
-            // Very basic evaluation using Function constructor securely. 
-            // We only inject the numbers in place of the keys.
-            let parsed = conditionString.toLowerCase();
-
-            const metrics = ['temperature', 'humidity', 'light_level', 'soil_moisture'];
-            for (const m of metrics) {
-                if (parsed.includes(m)) {
-                    const val = Number(readingsData[m]);
-                    if (isNaN(val)) return false; // Metric not present, can't evaluate accurately
-                    // Add spaces to prevent "something_temperature" accidental replace
-                    // A safer regex replacement:
-                    const regex = new RegExp(`\\b${m}\\b`, 'g');
-                    parsed = parsed.replace(regex, val);
-                }
-            }
-
-            parsed = parsed.replace(/and/g, '&&').replace(/or/g, '||');
-
-            // Check if any alphabetical characters left (indicating unreplaced vars or bad logic)
-            if (/[a-zA-Z]/.test(parsed)) return false;
-
-            // Safe evaluation execution
-            const result = new Function(`return ${parsed}`)();
-            return Boolean(result);
-        } catch (e) {
-            console.error('Failed to parse automation condition:', conditionString, e);
-            return false;
-        }
+        // Per-device lock: prevents concurrent evaluation for the same device
+        this._evaluating = new Set();
     }
 
     /**
-     * Evaluates all active rules for a specific parent device given its latest reading.
-     * Ensures that the highest priority rule wins in case of conflicting actuator sets.
+     * Core evaluation loop:
+     * 1. Load last known state (fan/heater/light) from control_actions
+     * 2. Evaluate each rule; override state only when rule matches
+     * 3. Enforce Fan↔Heater mutex (Fan wins)
+     * 4. Write new control_actions row
+     * 5. Update actuators table rows (by device name)
      */
-    async processReadings(device_id, readingData) {
-        if (this.evaluating) return;
-        this.evaluating = true;
+    async evaluate(device_id) {
+        if (this._evaluating.has(device_id)) {
+            console.log(`[AutoEngine] Skip — already running for ${device_id}`);
+            return null;
+        }
+        this._evaluating.add(device_id);
+        console.log(`[AutoEngine] Evaluating ${device_id}`);
 
         try {
-            // 1. Fetch active rules for the device ordered by priority (1 is highest priority)
-            const { data: rules, error: rulesErr } = await supabase
+            // ── 0. Check control mode ─────────────────────────────────────────────
+            const { data: parentUnit } = await supabase
+                .from('parent_units')
+                .select('control_mode')
+                .eq('unit_id', device_id)
+                .single();
+
+            if (parentUnit?.control_mode === 'manual') {
+                console.log(`[AutoEngine] Skipped ${device_id} — manual mode`);
+                return null;
+            }
+
+            // ── 1. Latest sensor reading ──────────────────────────────────────────
+            const { data: reading } = await supabase
+                .from('readings')
+                .select('temperature, humidity, light_level, recorded_at')
+                .eq('device_id', device_id)
+                .order('recorded_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (!reading) {
+                console.log(`[AutoEngine] No reading found for ${device_id}`);
+                return null;
+            }
+            console.log(`[AutoEngine] Reading: T=${reading.temperature}°C L=${reading.light_level}lux`);
+
+            // ── 2. Last known device states (fallback when no rule fires) ─────────
+            const { data: lastAction } = await supabase
+                .from('control_actions')
+                .select('fan_state, heater_state, light_state')
+                .eq('device_id', device_id)
+                .order('timestamp', { ascending: false })
+                .limit(1)
+                .single();
+
+            // Start from previous state — no rule match = no change (dead band preserved)
+            const resolved = {
+                fan: lastAction?.fan_state ?? 'off',
+                heater: lastAction?.heater_state ?? 'off',
+                light: lastAction?.light_state ?? 'off',
+            };
+            console.log(`[AutoEngine] Previous state: fan=${resolved.fan} heater=${resolved.heater} light=${resolved.light}`);
+
+            // ── 3. Evaluate rules ─────────────────────────────────────────────────
+            // Note: If the priority column doesn't exist yet, fall back to created_at order
+            let rulesQuery = supabase
                 .from('automation_rules')
                 .select('*')
                 .eq('device_id', device_id)
-                .eq('is_active', true)
-                .order('created_at', { ascending: true });
+                .eq('is_active', true);
 
-            if (rulesErr || !rules || rules.length === 0) {
-                this.evaluating = false;
-                return;
+            let { data: rules, error: rulesErr } = await rulesQuery.order('priority', { ascending: true });
+            if (rulesErr) {
+                // priority column may not exist yet — retry without ordering
+                console.warn('[AutoEngine] priority order failed, retrying without order:', rulesErr.message);
+                ({ data: rules } = await rulesQuery.order('created_at', { ascending: true }));
             }
 
-            // We maintain a map of the actions we want to apply to resolve conflicts.
-            // E.g. desiredActions = { 'act1_fan': { status: true, rule_id: '...', name: '...'} }
-            const desiredActions = {};
-
-            for (const rule of rules) {
-                const isMatched = this.evaluateCondition(rule.trigger_condition, readingData);
-
-                if (isMatched && rule.action) {
-                    // Action format: "act1_fan:on" or "act2_heater:off"
-                    const parts = rule.action.split(':');
-                    if (parts.length === 2) {
-                        const actuatorKey = parts[0].trim();
-                        const targetStatus = parts[1].trim() === 'on';
-                        if (!desiredActions[actuatorKey]) {
-                            desiredActions[actuatorKey] = { targetStatus, rule };
-                        }
+            const ruleLog = [];
+            for (const rule of (rules || [])) {
+                const matched = evaluateCondition(rule.trigger_condition, reading);
+                if (matched && rule.action) {
+                    const [rawDevice, state] = rule.action.split(':');
+                    // Normalize "act1_fan" / "act2_heater" / "act1_light" → "fan" / "heater" / "light"
+                    const keyMatch = rawDevice && rawDevice.match(/(fan|heater|light)/i);
+                    const device = keyMatch ? keyMatch[1].toLowerCase() : (rawDevice || '').toLowerCase();
+                    if (device && state && resolved.hasOwnProperty(device)) {
+                        resolved[device] = state.trim();
+                        ruleLog.push(`${rule.name} → ${device}:${state}`);
+                        console.log(`[AutoEngine] Rule matched: "${rule.name}" → ${device}:${state}`);
                     }
                 }
             }
 
-            // If no actions to take, bail out.
-            if (Object.keys(desiredActions).length === 0) {
-                this.evaluating = false;
-                return;
+            // ── 4. Fan ↔ Heater mutex — Fan takes priority ────────────────────────
+            if (resolved.fan === 'on' && resolved.heater === 'on') {
+                console.log('[AutoEngine] Mutex: both fan+heater ON → heater forced OFF');
+                resolved.heater = 'off';
             }
+            console.log(`[AutoEngine] Resolved: fan=${resolved.fan} heater=${resolved.heater} light=${resolved.light}`);
 
-            // 2. Fetch all physical actuators under this device to map their keys
-            const { data: actuators, error: aErr } = await supabase
+            // ── 5. Load slot assignments ──────────────────────────────────────────
+            const { data: settings } = await supabase
+                .from('device_settings')
+                .select('slot_1_device, slot_2_device')
+                .eq('device_id', device_id)
+                .single();
+
+            const slot1Device = settings?.slot_1_device ?? 'fan';
+            const slot2Device = settings?.slot_2_device ?? 'light';
+            const slotStates = {
+                slot_1: resolved[slot1Device] ?? 'off',
+                slot_2: resolved[slot2Device] ?? 'off',
+            };
+
+            // ── 6. Persist new control_actions row ────────────────────────────────
+            const { error: caErr } = await supabase.from('control_actions').insert([{
+                device_id,
+                actuator_id: null,          // automation targets all actuators collectively
+                action_type: 'auto_evaluate',
+                new_status: resolved.fan === 'on' || resolved.heater === 'on' || resolved.light === 'on',
+                fan_state: resolved.fan,
+                heater_state: resolved.heater,
+                light_state: resolved.light,
+                status: 'success',
+                reason: ruleLog.length ? ruleLog.join('; ') : 'No rule matched — previous state preserved',
+            }]);
+            if (caErr) console.error('[AutoEngine] control_actions insert error:', caErr.message);
+
+            // ── 7. Apply to actuators table ───────────────────────────────────────
+            // Only update the ONE actuator assigned to each slot:
+            //   slot 1 device (e.g. "fan")   → actuator whose name matches "1" + "fan"  → "Actuator 1 Fan"
+            //   slot 2 device (e.g. "light") → actuator whose name matches "2" + "light" → "Actuator 2 Light"
+            // This prevents touching the unassigned actuators of the same type.
+            const { data: actuators } = await supabase
                 .from('actuators')
                 .select('actuator_id, name, status')
-                .eq('device_id', device_id);
+                .eq('device_id', device_id)
+                .is('deleted_at', null);
 
-            if (aErr || !actuators) {
-                this.evaluating = false;
-                return;
-            }
+            const slotTargets = [
+                { slotNum: '1', deviceKey: slot1Device, targetOn: resolved[slot1Device] === 'on' },
+                { slotNum: '2', deviceKey: slot2Device, targetOn: resolved[slot2Device] === 'on' },
+            ];
 
-            // Map DB names to keys
-            const actuatorMap = {};
-            actuators.forEach(act => {
-                const name = act.name.toLowerCase();
-                let key = null;
-                if (name.includes('actuator 1 fan')) key = 'act1_fan';
-                else if (name.includes('actuator 1 light')) key = 'act1_light';
-                else if (name.includes('actuator 1 heater')) key = 'act1_heater';
-                else if (name.includes('actuator 2 fan')) key = 'act2_fan';
-                else if (name.includes('actuator 2 light')) key = 'act2_light';
-                else if (name.includes('actuator 2 heater')) key = 'act2_heater';
+            for (const act of (actuators || [])) {
+                const nameLower = act.name.toLowerCase();
+                let targetStatus = null;
 
-                if (key) {
-                    actuatorMap[key] = act;
+                for (const t of slotTargets) {
+                    // Match e.g. "actuator 1 fan" — must contain the slot number AND the device key
+                    if (nameLower.includes(t.slotNum) && nameLower.includes(t.deviceKey)) {
+                        targetStatus = t.targetOn;
+                        break;
+                    }
                 }
-            });
 
-            // 3. Apply actions and track history. We only apply if the current status differs from target.
-            for (const [key, intent] of Object.entries(desiredActions)) {
-                const actuator = actuatorMap[key];
-                if (!actuator) continue;
+                if (targetStatus === null) continue; // actuator not assigned to any active slot
+                if (act.status === targetStatus) continue; // no change needed
 
-                if (actuator.status !== intent.targetStatus) {
-                    // We need to actuate it!
-                    console.log(`[Auto] Triggering ${actuator.name} -> ${intent.targetStatus ? 'ON' : 'OFF'} [Rule: ${intent.rule.name}]`);
+                const { error: updErr } = await supabase
+                    .from('actuators')
+                    .update({ status: targetStatus, last_changed: new Date().toISOString() })
+                    .eq('actuator_id', act.actuator_id);
 
-                    const { error: updateErr } = await supabase
-                        .from('actuators')
-                        .update({
-                            status: intent.targetStatus,
-                            last_changed: new Date().toISOString()
-                        })
-                        .eq('actuator_id', actuator.actuator_id);
-
-                    const finalStatus = updateErr ? 'failed' : 'success';
-
-                    // Log the execution to control_history
+                if (!updErr) {
                     await supabase.from('control_history').insert([{
-                        device_id: device_id,
-                        actuator: actuator.name,
-                        command: intent.targetStatus ? 'ON' : 'OFF',
-                        triggered_by: `Auto Rule: ${intent.rule.name}`,
-                        status: finalStatus
+                        device_id,
+                        actuator: act.name,
+                        command: targetStatus ? 'ON' : 'OFF',
+                        triggered_by: 'Auto Evaluation',
+                        status: 'success',
                     }]);
+                    console.log(`[AutoEngine] Updated actuator "${act.name}" → ${targetStatus ? 'ON' : 'OFF'}`);
                 }
             }
+
+            return { resolved, slotStates, reading };
 
         } catch (e) {
-            console.error('[Automation Service Error]', e);
+            console.error('[AutoEngine] Error:', e);
+            return null;
         } finally {
-            this.evaluating = false;
+            this._evaluating.delete(device_id);
         }
+    }
+
+    /** Legacy compatibility — called by existing reading upload path */
+    async processReadings(device_id, readingData) {
+        return this.evaluate(device_id);
     }
 }
 
