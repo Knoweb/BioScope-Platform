@@ -1,0 +1,35 @@
+﻿ M backend/src/controllers/device.controller.js
+ M backend/src/controllers/reading.controller.js
+ M bioscope_data_backup.sql
+ M frontend/src/api/readings.js
+ M frontend/src/components/UI.jsx
+ M frontend/src/hooks/index.js
+ M frontend/src/locales/en/translation.json
+ M frontend/src/locales/ja/translation.json
+ M frontend/src/pages/Controls.jsx
+ M frontend/src/pages/Controls.module.css
+ M frontend/src/pages/Dashboard.jsx
+ M frontend/src/pages/Dashboard.module.css
+ M frontend/src/pages/Devices.jsx
+ M frontend/src/pages/History.jsx
+ M frontend/src/pages/Reports.jsx
+ M frontend/src/pages/Sensors.jsx
+ M src/pages/Controls.jsx
+ M src/pages/Devices.jsx
+?? backend/actuators_out.json
+?? backend/analyze_db.js
+?? backend/analyze_db_output.txt
+?? backend/check_devices.js
+?? backend/check_rules.js
+?? backend/delete_p2.js
+?? backend/devices.json
+?? backend/dump_rules.js
+?? backend/get_actuators_schema.js
+?? backend/list_db.js
+?? backend/output.json
+?? backend/rules.json
+?? backend/update_actuators_v2.js
+?? backend/update_devices.js
+?? status.txt
+?? status_utf8.txt
+?? update_readings_schema.sql

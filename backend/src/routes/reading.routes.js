@@ -12,12 +12,12 @@ const readingLimiter = rateLimit({
   message: { error: 'Too many reading requests' }
 })
 
-router.use(authenticate)
+// router.use(authenticate)
 
-router.get('/',        getReadings)
-router.get('/latest',  getLatestReading)
-router.get('/stats',   getReadingStats)
-router.get('/chart',   getChartData)
-router.post('/',       readingLimiter, createReading)
+router.get('/', getReadings)
+router.get('/latest', getLatestReading)
+router.get('/stats', getReadingStats)
+router.get('/chart', getChartData)
+router.post('/', readingLimiter, createReading)
 
 export default router
