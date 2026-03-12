@@ -109,13 +109,13 @@ export function StatusPill({ status }) {
 }
 
 // ── Toggle ─────────────────────────────────────────────────────────────────
-export function Toggle({ on, onChange, loading, label }) {
+export function Toggle({ on, onChange, loading, disabled, label }) {
   return (
     <div className={styles.toggleWrap}>
       <button
-        className={`${styles.toggle} ${on ? styles.toggleOn : ''} ${loading ? styles.toggleLoading : ''}`}
+        className={`${styles.toggle} ${on ? styles.toggleOn : ''} ${loading ? styles.toggleLoading : ''} ${disabled && !loading ? styles.toggleDisabled : ''}`}
         onClick={onChange}
-        disabled={loading}
+        disabled={loading || disabled}
         aria-pressed={on}
       >
         <span className={styles.toggleThumb} />
