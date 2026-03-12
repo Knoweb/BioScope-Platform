@@ -46,6 +46,16 @@ export const AuthProvider = ({ children }) => {
     initAuth()
   }, [])
 
+  // ── Session expired (401 with failed refresh) — force logout ───────────────
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      authAPI.signOut()
+      setUser(null)
+    }
+    window.addEventListener('bioscope:session-expired', handleSessionExpired)
+    return () => window.removeEventListener('bioscope:session-expired', handleSessionExpired)
+  }, [])
+
   // ── Login ───────────────────────────────────────────────────────────────────
   const login = useCallback(async (email, password) => {
     const { data, error } = await authAPI.signIn(email, password)
