@@ -44,7 +44,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   const { toasts, add: addToast } = useToast()
-  const { user, login, signup } = useAuth()
+  const { user, login } = useAuth()
   const [lastUpdate, setLastUpdate] = useState(Date.now())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -64,7 +64,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login onLogin={login} addToast={addToast} />} />
-          <Route path="/signup" element={<Signup onSignup={signup} addToast={addToast} />} />
+          <Route path="/signup" element={<Signup addToast={addToast} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toast toasts={toasts} />
