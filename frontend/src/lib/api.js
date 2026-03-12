@@ -1,7 +1,11 @@
 // ─── Backend API Base Helper ─────────────────────────────────────────────────
 // All calls to your Express backend go through here
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+// In dev: use the same origin as the browser (works for mobile on LAN too)
+// In prod: use VITE_API_URL env variable or fallback to /api
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? `${window.location.origin}/api` : '/api')
+
 
 // Get stored token
 const getToken = () => localStorage.getItem('bioscope_token')

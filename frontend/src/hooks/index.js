@@ -97,141 +97,131 @@ export function useAudit(deviceId, range = 'hour') {
   return { data, loading, error, refetch: fetch_ }
 }
 
+// ── Helper: normalize actuator name → key ─────────────────────────────────
+export function buildControlKey(name) {
+  const n = (name || '').toLowerCase()
+  if (n.includes('fan')) return 'fan'
+  if (n.includes('light') || n.includes('led')) return 'light'
+  if (n.includes('heat')) return 'heater'
+  return null
+}
+
 // ── useControls ────────────────────────────────────────────────────────────
+// State per device: { fan: bool, light: bool, heater: bool }
 export function useControls() {
-  const [controls, setControls] = useState({})
+  const [controls, setControls] = useState({})  // { [deviceId]: { fan, light, heater } }
+  const [allActuators, setAllActuators] = useState([]) // raw rows (include actuator_slot)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(null)
 
+  const buildStatusMap = (actuators) => {
+    const m = { fan: false, light: false, heater: false }
+    // Use OR logic: if ANY actuator of this type is ON, the key is true.
+    // Prevents "Actuator 2 Heater OFF" overwriting "Actuator 1 Heater ON".
+    actuators.forEach(a => { const k = buildControlKey(a.name); if (k && a.status) m[k] = true })
+    return m
+  }
+
   const fetch_ = useCallback(async () => {
     try {
-      // Need a way to fetch the all-device status
-      // We'll use the devices API to fetch devices which includes actuator states
-      const res = await api.get('/devices')
-      const devices = res.data || []
-      const map = {}
-
-      devices.forEach(d => {
-        // Construct the expected control state map from actuators view or we can fetch a specific summary
-        // The dashboard expects: map[deviceId] = { fan_status: true, heater_status: false } etc
-        // Backend `GET /api/devices` just returns devices. But wait, `GET /api/devices/:id/summary` has it.
-        // Or if the backend returns actuators in an array, we can map them.
-        map[d.device_id] = {
-          act1_fan: false,
-          act1_light: false,
-          act1_heater: false,
-          act2_fan: false,
-          act2_light: false,
-          act2_heater: false
-        }
-      })
-
-      // Try to get actual statuses using a parallel fetch if possible, 
-      // but to be clean, let's fetch all controls from `/controls` if that returns active state
-      const { data: controlList } = await controlsAPI.getHistory()
-      // Wait, `/controls` gets control action history. 
-      // For actual actuator status, the actuators table holds `status (boolean)`.
-      // Let's fetch the devices summary or actuators directly!
-      const actRes = await api.get('/actuators')
+      const [devRes, actRes] = await Promise.all([
+        api.get('/devices'),
+        api.get('/actuators')
+      ])
+      const devices = devRes.data || []
       const actuators = actRes.data || []
+      setAllActuators(actuators)
 
-      actuators.forEach(act => {
-        if (!map[act.device_id]) map[act.device_id] = {}
-        let key = null
-        const name = act.name.toLowerCase()
-        if (name.includes('actuator 1 fan')) key = 'act1_fan'
-        else if (name.includes('actuator 1 light')) key = 'act1_light'
-        else if (name.includes('actuator 1 heater')) key = 'act1_heater'
-        else if (name.includes('actuator 2 fan')) key = 'act2_fan'
-        else if (name.includes('actuator 2 light')) key = 'act2_light'
-        else if (name.includes('actuator 2 heater')) key = 'act2_heater'
-        if (key) {
-          map[act.device_id][key] = act.status
-        }
-      })
-
+      const map = {}
+      devices.forEach(d => { map[d.device_id] = { fan: false, light: false, heater: false } })
+      const byDevice = {}
+      actuators.forEach(a => { if (!byDevice[a.device_id]) byDevice[a.device_id] = []; byDevice[a.device_id].push(a) })
+      for (const [devId, acts] of Object.entries(byDevice)) { map[devId] = buildStatusMap(acts) }
       setControls(map)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
   }, [])
 
   useEffect(() => {
     fetch_()
-
-    // Subscribe to actuator changes
     const realtime = getRealtimeClient()
     const channel = realtime
       .channel('public:actuators')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'actuators' }, (payload) => {
         const act = payload.new
-        let key = null
-        const name = act.name.toLowerCase()
-        if (name.includes('actuator 1 fan')) key = 'act1_fan'
-        else if (name.includes('actuator 1 light')) key = 'act1_light'
-        else if (name.includes('actuator 1 heater')) key = 'act1_heater'
-        else if (name.includes('actuator 2 fan')) key = 'act2_fan'
-        else if (name.includes('actuator 2 light')) key = 'act2_light'
-        else if (name.includes('actuator 2 heater')) key = 'act2_heater'
-
-        if (key) {
-          setControls(prev => ({
-            ...prev,
-            [act.device_id]: { ...(prev[act.device_id] || {}), [key]: act.status }
-          }))
-        }
+        setAllActuators(prev => {
+          const updated = prev.map(a => a.actuator_id === act.actuator_id ? act : a)
+          const deviceActs = updated.filter(a => a.device_id === act.device_id)
+          setControls(p => ({ ...p, [act.device_id]: buildStatusMap(deviceActs) }))
+          return updated
+        })
       })
       .subscribe()
-
-    return () => {
-      realtime.removeChannel(channel)
-    }
+    return () => realtime.removeChannel(channel)
   }, [fetch_])
 
   useInterval(fetch_, 15000)
 
+  /* Toggle fan | light | heater — enforces Fan↔Heater mutual exclusion */
   const toggle = useCallback(async (deviceId, field) => {
-    const key = `${deviceId}.${field}`
     const currentVal = controls[deviceId]?.[field]
-    const actuatorName = field === 'act1_fan' ? 'Actuator 1 Fan' :
-      field === 'act1_light' ? 'Actuator 1 Light' :
-        field === 'act1_heater' ? 'Actuator 1 Heater' :
-          field === 'act2_fan' ? 'Actuator 2 Fan' :
-            field === 'act2_light' ? 'Actuator 2 Light' :
-              field === 'act2_heater' ? 'Actuator 2 Heater' : ''
+    const turningOn = !currentVal
 
-    setUpdating(key)
+    if (turningOn) {
+      // Mutual exclusion: fan and heater cannot coexist
+      const blocker = field === 'fan' ? 'heater' : field === 'heater' ? 'fan' : null
+      if (blocker && controls[deviceId]?.[blocker]) {
+        return { success: false, error: `Cannot turn ${field} ON — ${blocker} is already ON` }
+      }
+      // Max 2 actuators active at once (2 physical ports)
+      const activeCount = Object.values(controls[deviceId] || {}).filter(Boolean).length
+      if (activeCount >= 2) {
+        return { success: false, error: 'Maximum 2 actuators can be active at once' }
+      }
+    }
+
+    setUpdating(`${deviceId}.${field}`)
     try {
-      // Find the actuator id by fetching actuators for this device
-      const actRes = await api.get(`/actuators?device_id=${deviceId}`)
-      const match = (actRes.data || []).find(a =>
-        a.name.toLowerCase().includes(actuatorName.toLowerCase()) ||
-        field.includes(a.name.toLowerCase())
-      )
-
-      if (!match) throw new Error(`Actuator not found for ${field}`)
+      // When turning OFF, prefer the actuator that is actually ON to avoid toggling wrong unit.
+      const match = turningOn
+        ? allActuators.find(a => a.device_id === deviceId && buildControlKey(a.name) === field)
+        : (allActuators.find(a => a.device_id === deviceId && buildControlKey(a.name) === field && a.status === true)
+           || allActuators.find(a => a.device_id === deviceId && buildControlKey(a.name) === field))
+      if (!match) throw new Error(`Actuator "${field}" not found for device ${deviceId}`)
 
       const { error } = await controlsAPI.triggerControl({
         device_id: deviceId,
         actuator_id: match.actuator_id,
-        action_type: !currentVal ? 'activate' : 'deactivate',
-        new_status: !currentVal
+        action_type: turningOn ? 'activate' : 'deactivate',
+        new_status: turningOn
       })
-
       if (error) throw error
 
-      setControls(p => ({ ...p, [deviceId]: { ...p[deviceId], [field]: !currentVal } }))
-      return { success: true, newVal: !currentVal }
+      setControls(p => ({ ...p, [deviceId]: { ...p[deviceId], [field]: turningOn } }))
+      return { success: true, newVal: turningOn }
     } catch (e) {
       return { success: false, error: e.message || e }
     } finally {
       setUpdating(null)
     }
-  }, [controls])
+  }, [controls, allActuators])
 
-  return { controls, loading, updating, toggle, refetch: fetch_ }
+  /* Change physical slot assignment of a device */
+  const assignSlot = useCallback(async (deviceId, slotNumber, actuatorKey) => {
+    const match = allActuators.find(
+      a => a.device_id === deviceId && buildControlKey(a.name) === actuatorKey
+    )
+    if (!match) return { success: false, error: 'Actuator not found' }
+    try {
+      await api.patch(`/actuators/${match.actuator_id}`, { actuator_slot: slotNumber })
+      setAllActuators(prev =>
+        prev.map(a => a.actuator_id === match.actuator_id ? { ...a, actuator_slot: slotNumber } : a)
+      )
+      return { success: true }
+    } catch (e) { return { success: false, error: e.message } }
+  }, [allActuators])
+
+  return { controls, allActuators, loading, updating, toggle, assignSlot, refetch: fetch_ }
 }
 
 // ── useDevices ─────────────────────────────────────────────────────────────
@@ -258,8 +248,19 @@ export function useDevices() {
     }
   }
 
+  const updateDeviceMode = async (id, mode) => {
+    try {
+      const { data } = await api.patch(`/devices/${id}`, { control_mode: mode })
+      setDevices(prev => prev.map(d => d.device_id === id ? { ...d, control_mode: mode } : d))
+      return { success: true, data }
+    } catch (e) {
+      console.error('Failed to update device mode', e)
+      return { success: false, error: e.message }
+    }
+  }
+
   useEffect(() => { fetch_() }, [fetch_])
-  return { devices, loading, refetch: fetch_, removeDevice }
+  return { devices, loading, refetch: fetch_, removeDevice, updateDeviceMode }
 }
 
 // ── useDashboardReadings ───────────────────────────────────────────────────
