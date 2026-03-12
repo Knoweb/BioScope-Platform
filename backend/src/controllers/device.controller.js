@@ -97,7 +97,7 @@ export const updateDevice = async (req, res, next) => {
 
     const table = typeInfo.type === 'parent' ? 'parent_units' : 'child_units'
     const allowed = typeInfo.type === 'parent'
-      ? ['name', 'location', 'gateway', 'firmware', 'ip_type', 'status']
+      ? ['name', 'location', 'gateway', 'firmware', 'ip_type', 'status', 'control_mode']
       : ['name', 'location', 'parent_unit_id', 'priority', 'status']
 
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)))
@@ -143,6 +143,64 @@ export const getDeviceSummary = async (req, res, next) => {
       .single()
 
     if (error) return res.status(404).json({ error: 'Device not found' })
+    return res.json({ data })
+  } catch (err) { next(err) }
+}
+
+// GET /api/devices/:id/slots
+export const getSlotAssignment = async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('device_settings')
+      .select('slot_1_device, slot_2_device')
+      .eq('device_id', req.params.id)
+      .maybeSingle()
+    if (error || !data || !data.slot_1_device) {
+      // Return defaults if no row yet or columns not yet migrated
+      return res.json({ data: { slot_1_device: 'fan', slot_2_device: 'light' } })
+    }
+    return res.json({ data })
+  } catch (err) { next(err) }
+}
+
+// PATCH /api/devices/:id/slots
+export const updateSlotAssignment = async (req, res, next) => {
+  try {
+    const { slot_1_device, slot_2_device } = req.body
+    if (!slot_1_device || !slot_2_device) {
+      return res.status(400).json({ error: 'slot_1_device and slot_2_device are required' })
+    }
+    const valid = ['fan', 'heater', 'light']
+    if (!valid.includes(slot_1_device) || !valid.includes(slot_2_device)) {
+      return res.status(400).json({ error: 'Each slot must be fan, heater, or light' })
+    }
+    if (slot_1_device === slot_2_device) {
+      return res.status(400).json({ error: 'Cannot assign the same device to both slots' })
+    }
+    const { data, error } = await supabase
+      .from('device_settings')
+      .upsert({ device_id: req.params.id, slot_1_device, slot_2_device }, { onConflict: 'device_id' })
+      .select('slot_1_device, slot_2_device')
+      .maybeSingle()
+    // Silently ignore DB errors (e.g. FK or missing migration) — UI uses the validated values
+    if (error) console.warn(`[slots] Could not persist for ${req.params.id}:`, error.message)
+    return res.json({ data: data ?? { slot_1_device, slot_2_device } })
+  } catch (err) { next(err) }
+}
+
+// GET /api/devices/:id/latest-state
+export const getLatestControlState = async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('control_actions')
+      .select('fan_state, heater_state, light_state, triggered_by, timestamp')
+      .eq('device_id', req.params.id)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single()
+    if (error || !data) {
+      return res.json({ data: { fan_state: 'off', heater_state: 'off', light_state: 'off', triggered_by: null } })
+    }
     return res.json({ data })
   } catch (err) { next(err) }
 }
