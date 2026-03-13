@@ -17,9 +17,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 24px 60px;
-    background: rgba(11, 26, 17, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: #08130d;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: fixed;
     top: 0;
@@ -269,6 +267,106 @@
     color: rgba(255, 255, 255, 0.4);
     font-size: 14px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Desktop-only polish (mobile remains unchanged) */
+@media (min-width: 769px) {
+    .landingPage {
+        position: relative;
+    }
+
+    .landingPage::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(900px 420px at 50% 24%, rgba(7, 19, 13, 0.22), transparent 70%),
+            linear-gradient(180deg, rgba(4, 10, 8, 0.25) 0%, rgba(4, 10, 8, 0.52) 100%);
+        z-index: 0;
+    }
+
+    .hero,
+    .features,
+    .footer {
+        position: relative;
+        z-index: 1;
+    }
+
+    .navbar {
+        position: fixed;
+        width: min(1240px, calc(100% - 56px));
+        left: 50%;
+        transform: translateX(-50%);
+        top: 2px;
+        padding: 14px 28px;
+        border-radius: 14px;
+        background: #08130d;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: none;
+    }
+
+    .hero {
+        width: min(1100px, 92%);
+        margin: 125px auto 72px;
+        min-height: calc(100vh - 220px);
+        padding: 58px 60px 54px;
+        border-radius: 20px;
+        background: rgba(8, 22, 15, 0.34);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.36);
+    }
+
+    .title {
+        font-size: clamp(56px, 6vw, 74px);
+        margin-bottom: 20px;
+    }
+
+    .subtitle {
+        max-width: 760px;
+        font-size: 24px;
+        line-height: 1.55;
+        margin-bottom: 28px;
+    }
+
+    .heroNote {
+        font-size: 16px;
+        max-width: 560px;
+        margin-bottom: 34px;
+        color: rgba(255, 255, 255, 0.74);
+    }
+
+    .ctaBtn {
+        min-height: 52px;
+        padding: 14px 34px;
+        border-radius: 10px;
+    }
+
+    .features {
+        width: min(1240px, calc(100% - 56px));
+        margin: 0 auto 28px;
+        border-radius: 20px;
+        padding: 68px 44px;
+        background: rgba(7, 19, 13, 0.74);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .grid {
+        gap: 28px;
+    }
+
+    .card {
+        min-height: 240px;
+        padding: 32px 28px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .footer {
+        background: transparent;
+        border-top: none;
+        padding-top: 10px;
+        padding-bottom: 32px;
+    }
 }
 
 /* Responsive */
