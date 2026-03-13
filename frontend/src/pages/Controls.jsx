@@ -178,25 +178,25 @@ function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, isLoading, on
         </div>
       )}
 
-      {/* Automation decision / manual control */}
-      {isManual ? (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-main)', border: '1px solid var(--border-subtle)'
-        }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Manual State</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Toggle on={isOn} loading={isLoading} onChange={onToggle} disabled={toggleDisabled || isBlocked} />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 26, color: isOn ? info.color : 'var(--text-muted)' }}>
-              {isOn ? 'ON' : 'OFF'}
-            </span>
-          </div>
+      {/* Manual control is always available (AUTO and MANUAL modes) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-main)', border: '1px solid var(--border-subtle)'
+      }}>
+        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Manual State</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Toggle on={isOn} loading={isLoading} onChange={onToggle} disabled={toggleDisabled || isBlocked} />
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 26, color: isOn ? info.color : 'var(--text-muted)' }}>
+            {isOn ? 'ON' : 'OFF'}
+          </span>
         </div>
-      ) : (
+      </div>
+
+      {!isManual && (
         <div style={{
           borderRadius: '8px', padding: '0.75rem 1rem',
           background: 'var(--bg-main)', border: '1px solid var(--border-subtle)',
-          marginTop: '0.25rem'
+          marginTop: '0.5rem'
         }}>
           <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '5px' }}>
             Automation decision:
@@ -258,7 +258,7 @@ export default function Controls({ addToast }) {
   }, [device])
 
   const dObj = parents.find(p => p.device_id === device)
-  const isManual = sensorStatus.canOverride || dObj?.control_mode === 'manual'
+  const isManual = dObj?.control_mode === 'manual'
   const ctrl = controls[device] ?? {}
 
   // Auto-evaluation cycle (every 30s in AUTO mode)
@@ -281,14 +281,6 @@ export default function Controls({ addToast }) {
     const timer = setInterval(runEval, 30_000)
     return () => clearInterval(timer)
   }, [device, isManual])
-
-  // Force to MANUAL if sensor offline
-  useEffect(() => {
-    if (sensorStatus.canOverride && dObj?.control_mode !== 'manual') {
-      updateDeviceMode(device, 'manual')
-        .then(() => addToast('⚠️ Sensor offline — switched to MANUAL mode', 'error'))
-    }
-  }, [sensorStatus.canOverride, device])
 
   const handleToggle = async (field) => {
     const { success, newVal, error } = await toggle(device, field)
@@ -334,7 +326,6 @@ export default function Controls({ addToast }) {
   }
 
   const switchMode = async (newMode) => {
-    if (sensorStatus.canOverride) return
     const { success, error } = await updateDeviceMode(device, newMode)
     if (success) addToast(`Switched to ${newMode.toUpperCase()}`, 'success')
     else addToast(`Failed: ${error}`, 'error')
@@ -376,7 +367,7 @@ export default function Controls({ addToast }) {
           borderRadius: '8px', padding: '0.75rem 1.25rem',
           color: 'var(--red)', fontWeight: 600, display: 'flex', gap: '0.5rem', alignItems: 'center'
         }}>
-          🔴 Sensor Offline — last reading {sensorStatus.minutesSince} min ago. Manual mode is active. Automation is paused.
+          🔴 Sensor Offline — last reading {sensorStatus.minutesSince} min ago. Manual control is still available.
         </div>
       )}
 
@@ -393,15 +384,15 @@ export default function Controls({ addToast }) {
           <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: 500 }}>Control Mode</span>
           <div className={styles.modeBtnRow} style={{ display: 'flex', gap: '0.35rem' }}>
             <button
-              onClick={() => !sensorStatus.canOverride && switchMode('auto')}
-              disabled={sensorStatus.canOverride}
-              title={sensorStatus.canOverride ? 'Cannot switch to AUTO — sensor is offline' : ''}
+              onClick={() => switchMode('auto')}
+              disabled={false}
+              title=""
               style={{
-                padding: '5px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '0.82rem', cursor: sensorStatus.canOverride ? 'not-allowed' : 'pointer',
+                padding: '5px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer',
                 background: !isManual ? 'var(--cyan)' : 'transparent',
-                color: !isManual ? '#fff' : sensorStatus.canOverride ? 'var(--text-dim)' : 'var(--text-muted)',
+                color: !isManual ? '#fff' : 'var(--text-muted)',
                 border: `1.5px solid ${!isManual ? 'var(--cyan)' : 'var(--border-subtle)'}`,
-                transition: 'all 0.2s', opacity: sensorStatus.canOverride ? 0.45 : 1,
+                transition: 'all 0.2s', opacity: 1,
               }}>
               ⚡ AUTO
             </button>
@@ -409,7 +400,7 @@ export default function Controls({ addToast }) {
               onClick={() => switchMode('manual')}
               disabled={false}
               style={{
-                padding: '5px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '0.82rem', cursor: sensorStatus.canOverride ? 'not-allowed' : 'pointer',
+                padding: '5px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer',
                 background: isManual ? 'var(--amber)' : 'transparent',
                 color: isManual ? '#fff' : 'var(--text-muted)',
                 border: `1.5px solid ${isManual ? 'var(--amber)' : 'var(--border-subtle)'}`,

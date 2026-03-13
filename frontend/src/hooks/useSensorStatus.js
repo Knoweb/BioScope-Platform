@@ -3,16 +3,14 @@ import { api } from '../lib/api'
 
 /**
  * Polls the latest reading timestamp for a device every 60 seconds.
- * Returns sensor health info used to show banners and force manual mode.
+ * Returns sensor health info used to show stale/offline banners.
  *
  * severity: 'ok' (< 10 min) | 'warning' (10–30 min) | 'offline' (> 30 min)
- * canOverride: true when sensor is offline — forces MANUAL mode
  */
 export function useSensorStatus(deviceId) {
     const [status, setStatus] = useState({
         isStale: false,
         minutesSince: null,
-        canOverride: false,
         severity: 'ok',
         lastUpdated: null,
     })
@@ -27,7 +25,7 @@ export function useSensorStatus(deviceId) {
                 const latest = Array.isArray(rows) ? rows[0] : rows
 
                 if (!latest?.recorded_at) {
-                    setStatus({ isStale: true, minutesSince: 999, canOverride: true, severity: 'offline', lastUpdated: null })
+                    setStatus({ isStale: true, minutesSince: 999, severity: 'offline', lastUpdated: null })
                     return
                 }
 
@@ -35,7 +33,6 @@ export function useSensorStatus(deviceId) {
                 setStatus({
                     isStale: mins > 10,
                     minutesSince: Math.floor(mins),
-                    canOverride: mins > 30,
                     severity: mins > 30 ? 'offline' : mins > 10 ? 'warning' : 'ok',
                     lastUpdated: latest.recorded_at,
                     reading: latest,
