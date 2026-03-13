@@ -13,16 +13,22 @@ const resources = {
     },
 };
 
+const savedLanguage = localStorage.getItem('bioscope_language') || 'en';
+
 i18n
     .use(initReactI18next)
     .init({
         resources,
-        lng: 'en', // default language
+        lng: savedLanguage,
         fallbackLng: 'en',
 
         interpolation: {
             escapeValue: false, // react already safes from xss
         },
     });
+
+i18n.on('languageChanged', (lang) => {
+    localStorage.setItem('bioscope_language', lang);
+});
 
 export default i18n;

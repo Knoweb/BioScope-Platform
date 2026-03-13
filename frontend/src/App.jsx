@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from './contexts/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Toast from './components/Toast'
 import { useToast } from './hooks'
+import { api } from './lib/api'
 
 import Dashboard from './pages/Dashboard'
 import Sensors from './pages/Sensors'
@@ -45,15 +46,44 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const { toasts, add: addToast } = useToast()
   const { user, login } = useAuth()
-  const [lastUpdate, setLastUpdate] = useState(Date.now())
+  const [lastUpdate, setLastUpdate] = useState(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const handleRefresh = useCallback(() => {
-    setLastUpdate(Date.now())
+  const fetchLatestReadingTime = useCallback(async () => {
+    try {
+      const devicesRes = await api.get('/devices')
+      const devices = devicesRes?.data || []
+      if (!devices.length) return
+
+      const parent = devices.find(d => d.type === 'parent')
+      const target = parent || devices[0]
+      if (!target?.device_id) return
+
+      const isParent = target.type === 'parent' || String(target.device_id).startsWith('P')
+      const typeParam = isParent ? `parent_id=${target.device_id}` : `device_id=${target.device_id}`
+      const latestRes = await api.get(`/readings/latest?${typeParam}`)
+      const recordedAt = latestRes?.data?.recorded_at
+      if (recordedAt) {
+        setLastUpdate(recordedAt)
+      }
+    } catch {
+      // Keep previous timestamp when fetch fails
+    }
+  }, [])
+
+  const handleRefresh = useCallback(async () => {
+    await fetchLatestReadingTime()
     addToast('Data refreshed', 'success')
     // Force re-renders in child components by dispatching a custom event
     window.dispatchEvent(new CustomEvent('bioscope:refresh'))
-  }, [addToast])
+  }, [addToast, fetchLatestReadingTime])
+
+  useEffect(() => {
+    if (!user) return
+    fetchLatestReadingTime()
+    const timer = setInterval(fetchLatestReadingTime, 15000)
+    return () => clearInterval(timer)
+  }, [user, fetchLatestReadingTime])
 
   const passProps = { addToast }
 

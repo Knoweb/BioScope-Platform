@@ -49,6 +49,92 @@ export const humStatus = (h) => {
   return 'normal'
 }
 
+export const formatLocalizedDeviceName = (name, t) => {
+  if (!name) return ''
+  const raw = String(name).trim()
+
+  const parent = raw.match(/^parent\s*unit\s*(\d+)$/i) || raw.match(/^parent\s*(\d+)$/i)
+  if (parent) {
+    return t('devices.parentUnitName', {
+      number: parent[1],
+      defaultValue: `Parent Unit ${parent[1]}`,
+    })
+  }
+
+  const child = raw.match(/^child\s*unit\s*(\d+)$/i) || raw.match(/^child\s*(\d+)$/i)
+  if (child) {
+    return t('devices.childUnitName', {
+      number: child[1],
+      defaultValue: `Child Unit ${child[1]}`,
+    })
+  }
+
+  return raw
+}
+
+export const formatLocalizedDeviceRole = (role, t) => {
+  if (!role) return ''
+  if (role === 'parent') return t('devices.roleParent', 'parent')
+  if (role === 'child') return t('devices.roleChild', 'child')
+  return role
+}
+
+export const translateRuleName = (name, t) => {
+  if (!name) return ''
+  const normalized = String(name).toLowerCase().trim().replace(/[\s_]+/g, ' ')
+  const map = {
+    'device offline': 'alerts.ruleNames.deviceOffline',
+    'high humidity': 'alerts.ruleNames.highHumidity',
+    'high temperature': 'alerts.ruleNames.highTemperature',
+    'low temperature': 'alerts.ruleNames.lowTemperature',
+    'low humidity': 'alerts.ruleNames.lowHumidity',
+    'high light': 'alerts.ruleNames.highLight',
+    'low light': 'alerts.ruleNames.lowLight',
+  }
+  const key = map[normalized]
+  return key ? t(key, { defaultValue: name }) : name
+}
+
+export const translateConditionText = (condition, t) => {
+  if (!condition) return ''
+  return String(condition)
+    .replace(/\bno_data\b/gi, t('alerts.condition.noData', 'no_data'))
+    .replace(/\blight_level\b/gi, t('alerts.condition.lightLevel', 'light_level'))
+    .replace(/\btemperature\b/gi, t('alerts.condition.temperature', 'temperature'))
+    .replace(/\bhumidity\b/gi, t('alerts.condition.humidity', 'humidity'))
+}
+
+export const translateActionText = (action, t) => {
+  if (!action) return ''
+  const parsed = String(action).trim().match(/^([a-z_]+)\s*:\s*(on|off)$/i)
+  if (!parsed) return action
+
+  const actuator = parsed[1].toLowerCase()
+  const state = parsed[2].toLowerCase()
+  const actuatorMap = {
+    fan: 'controls.actuators.fan.label',
+    heater: 'controls.actuators.heater.label',
+    light: 'controls.actuators.light.label',
+  }
+  const actuatorLabel = actuatorMap[actuator] ? t(actuatorMap[actuator], { defaultValue: actuator }) : actuator
+  const stateLabel = state === 'on' ? t('controls.on', 'ON') : t('controls.off', 'OFF')
+  return `${actuatorLabel}:${stateLabel}`
+}
+
+export const translateSeverityLabel = (severity, t) => {
+  const s = String(severity || 'warning').toLowerCase()
+  if (s === 'critical') return t('alerts.severity.critical', 'CRITICAL')
+  if (s === 'warning') return t('alerts.severity.warning', 'WARNING')
+  return s.toUpperCase()
+}
+
+export const translateChannelStatus = (status, t) => {
+  const s = String(status || '').toLowerCase()
+  if (s === 'active') return t('alerts.channelStatus.active', 'ACTIVE')
+  if (s === 'inactive') return t('alerts.channelStatus.inactive', 'INACTIVE')
+  return s.toUpperCase()
+}
+
 export const downloadCSV = (rows, filename) => {
   if (!rows.length) return
   const keys = Object.keys(rows[0])

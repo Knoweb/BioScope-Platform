@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useDevices } from '../hooks'
 import { api } from '../lib/api'
-import { fmtDateTime } from '../utils'
+import { fmtDateTime, formatLocalizedDeviceName, formatLocalizedDeviceRole } from '../utils'
 import { Card, SectionHeader, Badge, Btn, PageLoader, EmptyState } from '../components/UI'
 import { useTranslation } from 'react-i18next'
 import styles from './Devices.module.css'
@@ -78,7 +78,7 @@ export default function Devices({ addToast }) {
               }}
             >
               <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📡 {t('devices.addParentUnit')}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Main hub device that actuators connect to.</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('devices.addParentDesc')}</div>
             </div>
 
             <div
@@ -90,7 +90,7 @@ export default function Devices({ addToast }) {
               }}
             >
               <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>🔌 {t('devices.addChildUnit')}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sensor modules that report to a Parent Unit.</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('devices.addChildDesc')}</div>
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export default function Devices({ addToast }) {
                 <label className={styles.inputLabel}>{t('devices.deviceNameLabel')}</label>
                 <input
                   className={styles.input}
-                  placeholder={addMode === 'parent' ? 'Parent Unit 1' : 'Child Unit 1'}
+                  placeholder={addMode === 'parent' ? t('devices.parentNameExample') : t('devices.childNameExample')}
                   value={newDev.name}
                   onChange={e => setNewDev({ ...newDev, name: e.target.value })}
                   style={{ background: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}
@@ -182,7 +182,7 @@ export default function Devices({ addToast }) {
           {/* PARENT UNITS SECTION */}
           {parentUnits.length > 0 && (
             <div>
-              <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>Parent Units</h3>
+              <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>{t('devices.parentUnitsHeading')}</h3>
               <div className={styles.devGrid}>
                 {parentUnits.map((d, i) => (
                   <DeviceCard key={d.device_id} d={d} i={i} t={t} addToast={addToast} handleRemove={handleRemove} />
@@ -194,7 +194,7 @@ export default function Devices({ addToast }) {
           {/* CHILD UNITS SECTION */}
           {devices.filter(d => d.type === 'child').length > 0 && (
             <div>
-              <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>Child Units</h3>
+              <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>{t('devices.childUnitsHeading')}</h3>
               <div className={styles.devGrid}>
                 {devices.filter(d => d.type === 'child').map((d, i) => (
                   <DeviceCard key={d.device_id} d={d} i={i} t={t} addToast={addToast} handleRemove={handleRemove} />
@@ -210,14 +210,17 @@ export default function Devices({ addToast }) {
 }
 
 function DeviceCard({ d, i, t, addToast, handleRemove }) {
+  const displayName = formatLocalizedDeviceName(d.name || t('devices.deviceDefaultName', { id: d.device_id }), t)
+  const displayRole = formatLocalizedDeviceRole(d.type, t) || t('devices.standardMonitor')
+
   return (
     <Card className={`${styles.devCard} fade-up d${i + 1}`}>
       <div className={styles.devHeader}>
         <div className={styles.devId}>{d.device_id}</div>
         <Badge label={d.status === 'offline' ? t('devices.offline') : t('devices.online')} color={d.status === 'offline' ? 'red' : 'green'} />
       </div>
-      <div className={styles.devName}>{d.name || t('devices.deviceDefaultName', { id: d.device_id })}</div>
-      <div className={styles.devType}>{d.type || t('devices.standardMonitor')}</div>
+      <div className={styles.devName}>{displayName}</div>
+      <div className={styles.devType}>{displayRole}</div>
 
       <div className={styles.divider} />
 

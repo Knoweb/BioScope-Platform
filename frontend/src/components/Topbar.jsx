@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { fmtTime } from '../utils'
 import styles from './Topbar.module.css'
 
 
@@ -19,7 +20,7 @@ export default function Topbar({ onRefresh, lastUpdate, onToggleMenu }) {
   // ensure we always have a plain object with string label/sub.
   const rawInfo = t(`topbar.titles.${pathname}`, { returnObjects: true }) || t(`topbar.titles./`, { returnObjects: true })
   const info = (rawInfo !== null && typeof rawInfo === 'object' && !Array.isArray(rawInfo)) ? rawInfo : {}
-  const now = lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '—'
+  const now = lastUpdate ? fmtTime(lastUpdate) : '—'
 
   // Close menu when clicking outside
   useEffect(() => {

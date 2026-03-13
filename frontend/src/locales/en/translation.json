@@ -1,5 +1,6 @@
 {
     "nav": {
+        "home": "Home",
         "monitor": "MONITOR",
         "data": "DATA",
         "manage": "MANAGE",
@@ -13,7 +14,7 @@
         "settings": "Settings"
     },
     "topbar": {
-        "lastUpdate": "LAST UPDATE",
+        "lastUpdate": "LAST READING",
         "refresh": "Refresh",
         "titles": {
             "/": {
@@ -26,7 +27,7 @@
             },
             "/controls": {
                 "label": "Device Controls",
-                "sub": "Manual actuator management"
+                "sub": "Auto/Manual actuator management"
             },
             "/history": {
                 "label": "Data History",
@@ -50,6 +51,17 @@
             }
         }
     },
+    "common": {
+        "loadingData": "Loading data...",
+        "noData": "No data",
+        "unit": "Unit",
+        "status": {
+            "normal": "NORMAL",
+            "high": "HIGH",
+            "low": "LOW",
+            "unknown": "UNKNOWN"
+        }
+    },
     "dashboard": {
         "deviceStatus": "Device Status",
         "loadingDevices": "Loading devices...",
@@ -69,7 +81,18 @@
         "allNormal": "All parameters within normal range",
         "quickStats": "Quick Stats",
         "autoRefresh": "AUTO-REFRESH 15s",
+        "controlMode": "Control Mode",
+        "modeManual": "MANUAL",
+        "modeAuto": "AUTO",
+        "override": "Override",
+        "actuatorSlots": "Actuator Slots",
+        "manage": "Manage",
+        "slot": "Slot",
+        "switchedMode": "Switched to {{mode}}",
+        "failedMode": "Failed: {{error}}",
         "totalDevices": "TOTAL DEVICES",
+        "parentUnits": "PARENT UNITS",
+        "childUnits": "CHILD UNITS",
         "fansActive": "FANS ACTIVE",
         "heatersActive": "HEATERS ACTIVE",
         "alertsMsg": {
@@ -119,9 +142,47 @@
         "if": "IF",
         "then": "THEN",
         "name": "Name: {{name}}",
+        "rule": "Rule",
+        "action": "Action",
         "clickToDisable": "Click to Disable",
         "clickToEnable": "Click to Enable",
         "disabled": "DISABLED",
+        "edit": "Edit",
+        "matched": "matched",
+        "delayed": "DELAYED ({{minutes}}m)",
+        "controlMode": "Control Mode",
+        "modeAuto": "AUTO",
+        "modeManual": "MANUAL",
+        "evaluating": "evaluating...",
+        "automationControlling": "Automation rules are controlling actuators",
+        "sensorOfflineBanner": "🔴 Sensor Offline — last reading {{minutes}} min ago. Manual control is still available.",
+        "noParentUnits": "No Parent Units",
+        "noParentUnitsSub": "Actuators can only be controlled on parent units.",
+        "controlFailed": "Control failed",
+        "cannotAssignSame": "Cannot assign same device to both slots",
+        "slotAssigned": "Slot {{slot}} → {{device}}",
+        "ruleUpdated": "Rule updated",
+        "failedWithReason": "Failed: {{reason}}",
+        "switchedToMode": "Switched to {{mode}}",
+        "toggleSuccess": "{{device}} {{state}}",
+        "inverseOf": "Inverse of",
+        "pluggedInDevice": "Plugged-in device:",
+        "alreadyAssignedToSlot": "Already assigned to Slot {{slot}}",
+        "blockedExclusive": "⚠️ Blocked — {{device}} is {{on}} (mutually exclusive)",
+        "manualState": "Manual State",
+        "actuatorSlot": "Actuator Slot",
+        "automationDecision": "Automation decision:",
+        "autoDecisionMatched": "Turn {{state}} ({{action}} rule matched)",
+        "autoDecisionNoMatch": "{{state}} (no rule matched)",
+        "unassignedOnWarning": "⚠ {{device}} is {{on}} but not assigned to any slot — it is blocking other actuators!",
+        "unassignedWarning": "⚠ {{device}} not assigned to any slot — it won't be controlled.",
+        "deviceTurnedOff": "{{device}} turned {{off}}",
+        "failedTurnOff": "Failed to turn off",
+        "turnOff": "Turn OFF",
+        "activeAutomationRules": "Active Automation Rules",
+        "mutualExclusiveNote": "🔒 Fan and Heater are mutually exclusive — if both rules match, Fan takes priority.",
+        "triggerPlaceholder": "e.g. temperature > 30",
+        "priority": "Priority (1 = highest)",
         "editThresholdBtn": "Edit Threshold",
         "editThresholdTitle": "Edit Automation Threshold",
         "systemRule": "System Rule:",
@@ -180,6 +241,14 @@
         "last1Hour": "Last 1 Hour",
         "last24Hours": "Last 24 Hours",
         "last7Days": "Last 7 Days",
+        "preparingReport": "Preparing {{format}} report for {{device}}...",
+        "noDataSelectedRange": "No data found for the selected time range",
+        "exportedSuccess": "Successfully exported {{count}} records as {{format}}",
+        "exportFailed": "Export failed: {{error}}",
+        "generatingFull": "Generating full multi-device report... This may take a moment",
+        "noFullData": "No data found for any devices in the last 24 hours",
+        "fullGenerated": "Full fleet report generated successfully",
+        "fullFailed": "Full report failed: {{error}}",
         "loadingStats": "Loading stats...",
         "noDataAvailable": "No data available",
         "temperatureHeader": "🌡️ TEMPERATURE (°C)",
@@ -213,6 +282,17 @@
         "registerNewTitle": "Register New Device",
         "addParentUnit": "Register Parent Unit",
         "addChildUnit": "Register Child Unit",
+        "addParentDesc": "Main hub device that actuators connect to.",
+        "addChildDesc": "Sensor modules that report to a Parent Unit.",
+        "parentNameExample": "Parent Unit 1",
+        "childNameExample": "Child Unit 1",
+        "parentUnitsHeading": "Parent Units",
+        "childUnitsHeading": "Child Units",
+        "parentUnitName": "Parent Unit {{number}}",
+        "childUnitName": "Child Unit {{number}}",
+        "roleParent": "parent",
+        "roleChild": "child",
+        "childDevice": "CHILD",
         "parentDeviceLabel": "Parent Device",
         "selectParent": "-- Select Parent --",
         "parentDevice": "PARENT",
@@ -269,6 +349,29 @@
         "colChannel": "CHANNEL",
         "colStatus": "STATUS",
         "noRules": "No rules configured",
+        "severity": {
+            "critical": "CRITICAL",
+            "warning": "WARNING"
+        },
+        "condition": {
+            "temperature": "temperature",
+            "humidity": "humidity",
+            "lightLevel": "light_level",
+            "noData": "no_data"
+        },
+        "ruleNames": {
+            "deviceOffline": "Device Offline",
+            "highHumidity": "High Humidity",
+            "highTemperature": "High Temperature",
+            "lowTemperature": "Low Temperature",
+            "lowHumidity": "Low Humidity",
+            "highLight": "High Light",
+            "lowLight": "Low Light"
+        },
+        "channelStatus": {
+            "active": "ACTIVE",
+            "inactive": "INACTIVE"
+        },
         "appChannel": "App",
         "active": "Active",
         "disabled": "Disabled",
@@ -315,7 +418,20 @@
         "account": "Account",
         "logout": "Logout",
         "saveSettings": "Save Settings",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "savedLocal": "Settings saved locally (read-only mode)",
+        "savedSuccess": "Settings saved successfully",
+        "saveFailed": "Failed to save settings: {{reason}}",
+        "loggedOut": "Logged out successfully",
+        "lightMode": "Light Mode",
+        "themeEnabled": "{{theme}} enabled",
+        "secondsOption": "{{value}} seconds",
+        "daysOption": "{{value}} days",
+        "oneYear": "1 year",
+        "exportInitiated": "Export initiated",
+        "deleteDisabled": "This action is disabled in demo",
+        "user": "User",
+        "userBadge": "USER"
     },
     "landing": {
         "tagline": "BioScope Environment Monitor",

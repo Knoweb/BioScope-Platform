@@ -1,11 +1,12 @@
 {
     "nav": {
+        "home": "ホーム",
         "monitor": "モニター",
         "data": "データ",
         "manage": "管理",
         "dashboard": "ダッシュボード",
-        "sensors": "センサー",
-        "controls": "コントロール",
+        "sensors": "センサー値",
+        "controls": "制御",
         "history": "履歴",
         "reports": "レポート",
         "devices": "デバイス",
@@ -13,7 +14,7 @@
         "settings": "設定"
     },
     "topbar": {
-        "lastUpdate": "最終更新",
+        "lastUpdate": "最終読み取り",
         "refresh": "更新",
         "titles": {
             "/": {
@@ -21,12 +22,12 @@
                 "sub": "すべてのデバイスのリアルタイム概要"
             },
             "/sensors": {
-                "label": "センサーの読み取り値",
+                "label": "センサー値",
                 "sub": "環境データのライブモニタリング"
             },
             "/controls": {
-                "label": "デバイスコントロール",
-                "sub": "手動アクチュエータ管理"
+                "label": "制御",
+                "sub": "自動/手動アクチュエータ管理"
             },
             "/history": {
                 "label": "データ履歴",
@@ -50,6 +51,17 @@
             }
         }
     },
+    "common": {
+        "loadingData": "データを読み込み中...",
+        "noData": "データなし",
+        "unit": "ユニット",
+        "status": {
+            "normal": "正常",
+            "high": "高い",
+            "low": "低い",
+            "unknown": "不明"
+        }
+    },
     "dashboard": {
         "deviceStatus": "デバイスステータス",
         "loadingDevices": "デバイスを読み込み中...",
@@ -69,7 +81,18 @@
         "allNormal": "すべてのパラメータは正常範囲内です",
         "quickStats": "クイック統計",
         "autoRefresh": "自動更新 15秒",
+        "controlMode": "制御モード",
+        "modeManual": "手動",
+        "modeAuto": "自動",
+        "override": "上書き",
+        "actuatorSlots": "アクチュエータスロット",
+        "manage": "管理",
+        "slot": "スロット",
+        "switchedMode": "{{mode}} に切り替えました",
+        "failedMode": "失敗: {{error}}",
         "totalDevices": "デバイスの総数",
+        "parentUnits": "親ユニット",
+        "childUnits": "子ユニット",
         "fansActive": "アクティブなファン",
         "heatersActive": "アクティブなヒーター",
         "alertsMsg": {
@@ -119,9 +142,47 @@
         "if": "条件:",
         "then": "アクション:",
         "name": "名前: {{name}}",
+        "rule": "ルール",
+        "action": "アクション",
         "clickToDisable": "クリックして無効化",
         "clickToEnable": "クリックして有効化",
         "disabled": "無効",
+        "edit": "編集",
+        "matched": "一致",
+        "delayed": "遅延 ({{minutes}}分)",
+        "controlMode": "制御モード",
+        "modeAuto": "自動",
+        "modeManual": "手動",
+        "evaluating": "評価中...",
+        "automationControlling": "自動化ルールがアクチュエータを制御中",
+        "sensorOfflineBanner": "🔴 センサーオフライン — 最後の読み取りは {{minutes}} 分前です。手動制御は引き続き利用できます。",
+        "noParentUnits": "親ユニットがありません",
+        "noParentUnitsSub": "アクチュエータは親ユニットでのみ制御できます。",
+        "controlFailed": "制御に失敗しました",
+        "cannotAssignSame": "同じデバイスを両方のスロットに割り当てることはできません",
+        "slotAssigned": "スロット {{slot}} → {{device}}",
+        "ruleUpdated": "ルールを更新しました",
+        "failedWithReason": "失敗: {{reason}}",
+        "switchedToMode": "{{mode}} に切り替えました",
+        "toggleSuccess": "{{device}} {{state}}",
+        "inverseOf": "反対対象:",
+        "pluggedInDevice": "接続デバイス:",
+        "alreadyAssignedToSlot": "すでにスロット {{slot}} に割り当て済み",
+        "blockedExclusive": "⚠️ ブロック中 — {{device}} が {{on}}（同時稼働不可）",
+        "manualState": "手動状態",
+        "actuatorSlot": "アクチュエータスロット",
+        "automationDecision": "自動化の判定:",
+        "autoDecisionMatched": "{{state}} にする（{{action}} ルール一致）",
+        "autoDecisionNoMatch": "{{state}}（一致ルールなし）",
+        "unassignedOnWarning": "⚠ {{device}} は {{on}} ですが、どのスロットにも割り当てられていないため他のアクチュエータをブロックしています。",
+        "unassignedWarning": "⚠ {{device}} はどのスロットにも割り当てられていないため制御されません。",
+        "deviceTurnedOff": "{{device}} を {{off}} にしました",
+        "failedTurnOff": "オフにできませんでした",
+        "turnOff": "オフにする",
+        "activeAutomationRules": "有効な自動化ルール",
+        "mutualExclusiveNote": "🔒 ファンとヒーターは同時に動作できません。両方一致した場合はファンが優先されます。",
+        "triggerPlaceholder": "例: temperature > 30",
+        "priority": "優先度（1が最優先）",
         "editThresholdBtn": "しきい値の編集",
         "editThresholdTitle": "自動化しきい値の編集",
         "systemRule": "システムルール:",
@@ -180,6 +241,14 @@
         "last1Hour": "過去1時間",
         "last24Hours": "過去24時間",
         "last7Days": "過去7日間",
+        "preparingReport": "{{device}} の {{format}} レポートを準備中...",
+        "noDataSelectedRange": "選択した時間範囲のデータがありません",
+        "exportedSuccess": "{{count}} 件を {{format}} としてエクスポートしました",
+        "exportFailed": "エクスポートに失敗しました: {{error}}",
+        "generatingFull": "複数デバイスの完全レポートを生成中です... 少し時間がかかる場合があります",
+        "noFullData": "過去24時間でデータのあるデバイスが見つかりません",
+        "fullGenerated": "全体レポートを正常に生成しました",
+        "fullFailed": "全体レポートの生成に失敗しました: {{error}}",
         "loadingStats": "統計を読み込み中...",
         "noDataAvailable": "データがありません",
         "temperatureHeader": "🌡️ 温度 (°C)",
@@ -213,6 +282,17 @@
         "registerNewTitle": "新しいデバイスを登録",
         "addParentUnit": "親ユニットを登録",
         "addChildUnit": "子ユニットを登録",
+        "addParentDesc": "アクチュエータが接続されるメインハブデバイスです。",
+        "addChildDesc": "親ユニットへデータを送信するセンサーモジュールです。",
+        "parentNameExample": "親ユニット 1",
+        "childNameExample": "子ユニット 1",
+        "parentUnitsHeading": "親ユニット",
+        "childUnitsHeading": "子ユニット",
+        "parentUnitName": "親ユニット {{number}}",
+        "childUnitName": "子ユニット {{number}}",
+        "roleParent": "親",
+        "roleChild": "子",
+        "childDevice": "子",
         "parentDeviceLabel": "親デバイス",
         "selectParent": "-- 親を選択 --",
         "parentDevice": "親",
@@ -269,6 +349,29 @@
         "colChannel": "チャネル",
         "colStatus": "ステータス",
         "noRules": "ルールが構成されていません",
+        "severity": {
+            "critical": "重大",
+            "warning": "警告"
+        },
+        "condition": {
+            "temperature": "温度",
+            "humidity": "湿度",
+            "lightLevel": "光量",
+            "noData": "データなし"
+        },
+        "ruleNames": {
+            "deviceOffline": "デバイスオフライン",
+            "highHumidity": "高湿度",
+            "highTemperature": "高温",
+            "lowTemperature": "低温",
+            "lowHumidity": "低湿度",
+            "highLight": "高照度",
+            "lowLight": "低照度"
+        },
+        "channelStatus": {
+            "active": "有効",
+            "inactive": "無効"
+        },
         "appChannel": "アプリ",
         "active": "アクティブ",
         "disabled": "無効",
@@ -315,7 +418,20 @@
         "account": "アカウント",
         "logout": "ログアウト",
         "saveSettings": "設定を保存",
-        "saving": "保存中..."
+        "saving": "保存中...",
+        "savedLocal": "設定をローカルに保存しました（読み取り専用モード）",
+        "savedSuccess": "設定を保存しました",
+        "saveFailed": "設定の保存に失敗しました: {{reason}}",
+        "loggedOut": "ログアウトしました",
+        "lightMode": "ライトモード",
+        "themeEnabled": "{{theme}} を有効にしました",
+        "secondsOption": "{{value}} 秒",
+        "daysOption": "{{value}} 日",
+        "oneYear": "1 年",
+        "exportInitiated": "エクスポートを開始しました",
+        "deleteDisabled": "デモ環境ではこの操作は無効です",
+        "user": "ユーザー",
+        "userBadge": "ユーザー"
     },
     "landing": {
         "tagline": "BioScope 環境モニター",

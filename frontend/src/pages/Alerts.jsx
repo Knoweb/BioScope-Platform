@@ -1,6 +1,6 @@
 import { useAlerts } from '../hooks'
 import { alertsAPI } from '../api'
-import { fmtDateTime } from '../utils'
+import { fmtDateTime, translateRuleName, translateConditionText, translateSeverityLabel, translateChannelStatus } from '../utils'
 import { Card, SectionHeader, Badge, Btn, PageLoader } from '../components/UI'
 import { useTranslation } from 'react-i18next'
 import styles from './Alerts.module.css'
@@ -57,8 +57,8 @@ export default function Alerts({ addToast }) {
                 <span className={styles.alertSeverityIcon}>{a.severity === 'critical' ? '🔴' : '🟡'}</span>
                 <div className={styles.alertBody}>
                   <div className={styles.alertTitle}>
-                    {a.title || a.message} — {t('alerts.device', { id: a.device_id })}
-                    <Badge label={(a.severity || 'warning').toUpperCase()} color={severityColor(a.severity)} />
+                    {translateRuleName(a.title || a.message, t)} — {t('alerts.device', { id: a.device_id })}
+                    <Badge label={translateSeverityLabel(a.severity, t)} color={severityColor(a.severity)} />
                   </div>
                   <div className={styles.alertDetail}>{a.message} · {fmtDateTime(a.created_at)}</div>
                 </div>
@@ -85,9 +85,9 @@ export default function Alerts({ addToast }) {
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>{t('alerts.noRules')}</div>
           ) : rules.map(r => (
             <div key={r.rule_id || r.id} className={styles.ruleRow}>
-              <span className={styles.ruleName}>{r.name}</span>
-              <span className={styles.ruleCond}>{r.condition}</span>
-              <Badge label={(r.severity || 'warning').toUpperCase()} color={severityColor(r.severity)} />
+              <span className={styles.ruleName}>{translateRuleName(r.name, t)}</span>
+              <span className={styles.ruleCond}>{translateConditionText(r.condition, t)}</span>
+              <Badge label={translateSeverityLabel(r.severity, t)} color={severityColor(r.severity)} />
               <span className={styles.ruleChannel}>{r.channel || t('alerts.appChannel')}</span>
               <Badge label={r.is_active ? t('alerts.active') : t('alerts.disabled')} color={r.is_active ? 'green' : 'muted'} />
               <Btn onClick={() => toggleRule(r.rule_id || r.id, r.is_active)} variant="secondary">{r.is_active ? t('alerts.disableBtn') : t('alerts.enableBtn')}</Btn>
@@ -111,7 +111,7 @@ export default function Alerts({ addToast }) {
                 <div className={styles.channelName}>{c.name}</div>
                 <div className={styles.channelDesc}>{c.desc}</div>
               </div>
-              <Badge label={c.status.toUpperCase()} color={c.status === 'active' ? 'green' : 'muted'} />
+              <Badge label={translateChannelStatus(c.status, t)} color={c.status === 'active' ? 'green' : 'muted'} />
             </div>
           ))}
         </div>

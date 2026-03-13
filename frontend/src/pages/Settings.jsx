@@ -38,7 +38,7 @@ export default function Settings({ addToast }) {
 
   const save = async () => {
     if (!updateProfile) {
-      addToast('Settings saved locally (read-only mode)', 'success')
+      addToast(t('settings.savedLocal', 'Settings saved locally (read-only mode)'), 'success')
       return
     }
 
@@ -46,9 +46,9 @@ export default function Settings({ addToast }) {
     try {
       const { error } = await updateProfile({ preferences: settings })
       if (error) throw error
-      addToast('Settings saved successfully', 'success')
+      addToast(t('settings.savedSuccess', 'Settings saved successfully'), 'success')
     } catch (e) {
-      addToast(`Failed to save settings: ${e.message || e}`, 'error')
+      addToast(t('settings.saveFailed', { reason: e.message || e, defaultValue: `Failed to save settings: ${e.message || e}` }), 'error')
     } finally {
       setSaving(false)
     }
@@ -56,14 +56,14 @@ export default function Settings({ addToast }) {
 
   const handleLogout = () => {
     logout()
-    addToast('Logged out successfully', 'success')
+    addToast(t('settings.loggedOut', 'Logged out successfully'), 'success')
     navigate('/login')
   }
 
   const handleThemeToggle = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
     setTheme(newTheme)
-    addToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'success')
+    addToast(t('settings.themeEnabled', { theme: newTheme === 'dark' ? t('settings.darkMode', 'Dark Mode') : t('settings.lightMode', 'Light Mode'), defaultValue: `${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled` }), 'success')
   }
 
   return (
@@ -84,11 +84,11 @@ export default function Settings({ addToast }) {
               value={settings.refreshInterval}
               onChange={e => set('refreshInterval', Number(e.target.value))}
             >
-              <option value={5}>5 seconds</option>
-              <option value={10}>10 seconds</option>
-              <option value={15}>15 seconds</option>
-              <option value={30}>30 seconds</option>
-              <option value={60}>60 seconds</option>
+              <option value={5}>{t('settings.secondsOption', { value: 5, defaultValue: '5 seconds' })}</option>
+              <option value={10}>{t('settings.secondsOption', { value: 10, defaultValue: '10 seconds' })}</option>
+              <option value={15}>{t('settings.secondsOption', { value: 15, defaultValue: '15 seconds' })}</option>
+              <option value={30}>{t('settings.secondsOption', { value: 30, defaultValue: '30 seconds' })}</option>
+              <option value={60}>{t('settings.secondsOption', { value: 60, defaultValue: '60 seconds' })}</option>
             </select>
           </SettingRow>
           <SettingRow label={t('settings.temperatureUnit')} desc={t('settings.temperatureUnitDesc')}>
@@ -132,17 +132,17 @@ export default function Settings({ addToast }) {
         <div className={styles.settingRows}>
           <SettingRow label={t('settings.dataRetention')} desc={t('settings.dataRetentionDesc')}>
             <select className={styles.select} value={settings.dataRetention} onChange={e => set('dataRetention', Number(e.target.value))}>
-              <option value={7}>7 days</option>
-              <option value={30}>30 days</option>
-              <option value={90}>90 days</option>
-              <option value={365}>1 year</option>
+              <option value={7}>{t('settings.daysOption', { value: 7, defaultValue: '7 days' })}</option>
+              <option value={30}>{t('settings.daysOption', { value: 30, defaultValue: '30 days' })}</option>
+              <option value={90}>{t('settings.daysOption', { value: 90, defaultValue: '90 days' })}</option>
+              <option value={365}>{t('settings.oneYear', '1 year')}</option>
             </select>
           </SettingRow>
           <SettingRow label={t('settings.exportData')} desc={t('settings.exportDataDesc')}>
-            <Btn onClick={() => addToast('Export initiated', 'info')} icon="⬇" variant="secondary">{t('settings.export')}</Btn>
+            <Btn onClick={() => addToast(t('settings.exportInitiated', 'Export initiated'), 'info')} icon="⬇" variant="secondary">{t('settings.export')}</Btn>
           </SettingRow>
           <SettingRow label={t('settings.deleteAccount')} desc={t('settings.deleteAccountDesc')}>
-            <Btn onClick={() => addToast('This action is disabled in demo', 'error')} variant="danger">{t('settings.delete')}</Btn>
+            <Btn onClick={() => addToast(t('settings.deleteDisabled', 'This action is disabled in demo'), 'error')} variant="danger">{t('settings.delete')}</Btn>
           </SettingRow>
         </div>
       </Card>
@@ -155,9 +155,9 @@ export default function Settings({ addToast }) {
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
           <div className={styles.accountInfo}>
-            <div className={styles.accountName}>{user?.name || 'User'}</div>
+            <div className={styles.accountName}>{user?.name || t('settings.user', 'User')}</div>
             <div className={styles.accountEmail}>{user?.email || 'user@bioscope.io'}</div>
-            <Badge label="USER" color="green" />
+            <Badge label={t('settings.userBadge', 'USER')} color="green" />
           </div>
         </div>
         <div className={styles.logoutRow}>

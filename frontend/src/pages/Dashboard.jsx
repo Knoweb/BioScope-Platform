@@ -13,6 +13,17 @@ const POLL = 15000
 export default function Dashboard({ addToast }) {
   const { t } = useTranslation()
 
+  const formatDeviceName = (name) => {
+    if (!name) return ''
+    const parent = String(name).match(/^parent\s+unit\s+(\d+)$/i)
+    if (parent) return `${t('devices.parentDevice', 'Parent')} ${t('common.unit', 'Unit')} ${parent[1]}`
+
+    const child = String(name).match(/^child\s+unit\s+(\d+)$/i)
+    if (child) return `${t('devices.childDevice', 'Child')} ${t('common.unit', 'Unit')} ${child[1]}`
+
+    return name
+  }
+
   // Fetch devices
   const { devices, loading: devLoading, updateDeviceMode } = useDevices()
   const deviceIds = useMemo(() => devices.map(d => d.device_id), [devices])
@@ -69,7 +80,7 @@ export default function Dashboard({ addToast }) {
           return (
             <div key={d} className={`${styles.deviceCard} fade-up d${i + 1}`}>
               <div className={styles.deviceCardHeader}>
-                <div className={styles.deviceId}>{device.name || `${t('dashboard.device')} ${d}`}</div>
+                <div className={styles.deviceId}>{formatDeviceName(device.name) || `${t('dashboard.device')} ${d}`}</div>
                 <Badge label={device.status === 'offline' ? t('dashboard.offline') : t('dashboard.online')} color={device.status === 'offline' ? 'red' : 'green'} />
               </div>
 
@@ -103,28 +114,28 @@ export default function Dashboard({ addToast }) {
                 <div className={styles.actuatorsColumn}>
                   <div className={styles.modeSwitchContainer}>
                     <div className={styles.modeSwitchLabel}>
-                      <span>⚙️</span> Control Mode
-                      <Badge label={device.control_mode === 'manual' ? 'MANUAL' : 'AUTO'} color={device.control_mode === 'manual' ? 'amber' : 'green'} />
+                      <span>⚙️</span> {t('dashboard.controlMode', 'Control Mode')}
+                      <Badge label={device.control_mode === 'manual' ? t('dashboard.modeManual', 'MANUAL') : t('dashboard.modeAuto', 'AUTO')} color={device.control_mode === 'manual' ? 'amber' : 'green'} />
                     </div>
                     <Toggle
                       on={device.control_mode === 'manual'}
                       onChange={async () => {
                         const newMode = device.control_mode === 'manual' ? 'auto' : 'manual'
                         const { success, error } = await updateDeviceMode(d, newMode)
-                        if (success) addToast(`Switched to ${newMode.toUpperCase()}`, 'success')
-                        else addToast(`Failed: ${error}`, 'error')
+                        if (success) addToast(t('dashboard.switchedMode', { mode: newMode.toUpperCase(), defaultValue: `Switched to ${newMode.toUpperCase()}` }), 'success')
+                        else addToast(t('dashboard.failedMode', { error, defaultValue: `Failed: ${error}` }), 'error')
                       }}
-                      label="Override"
+                      label={t('dashboard.override', 'Override')}
                     />
                   </div>
 
                   <div className={styles.actuatorSubSection}>
                     <div className={styles.actuatorSubTitle}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Actuator Slots</span>
+                      <span>{t('dashboard.actuatorSlots', 'Actuator Slots')}</span>
                       <button onClick={() => navigate('/controls')}
                         style={{ fontSize: '0.75rem', color: 'var(--cyan)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-                        Manage →
+                        {t('dashboard.manage', 'Manage')} →
                       </button>
                     </div>
                     <div className={styles.actuatorTilesGrid}>
@@ -144,12 +155,12 @@ export default function Dashboard({ addToast }) {
                           >
                             <div className={styles.actuatorTileHeader}>
                               <span className={styles.actuatorTileIcon}>{ICONS[assigned]}</span>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Slot {slotNum}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('dashboard.slot', 'Slot')} {slotNum}</span>
                             </div>
                             <div className={styles.actuatorTileInfo}>
-                              <div className={styles.actuatorTileName} style={{ textTransform: 'capitalize' }}>{assigned}</div>
+                              <div className={styles.actuatorTileName} style={{ textTransform: 'capitalize' }}>{t(`controls.actuators.${assigned}.label`, assigned)}</div>
                               <div className={styles.actuatorTileStatus} style={{ color: isOn ? color : 'var(--text-muted)' }}>
-                                {isOn ? 'ON' : 'OFF'}
+                                {isOn ? t('controls.on', 'ON') : t('controls.off', 'OFF')}
                               </div>
                             </div>
                           </div>
@@ -197,12 +208,8 @@ export default function Dashboard({ addToast }) {
         {[
           { label: t('dashboard.totalDevices'), value: devices.length, unit: '', color: 'var(--green)' },
           { label: t('dashboard.activeAlerts'), value: alerts.length, unit: '', color: alerts.length > 0 ? 'var(--red)' : 'var(--green)' },
-          {
-            label: 'Slots Active', value: devices.filter(d => {
-              const c = controls[d.device_id] || {}; return c.fan || c.heater || c.light
-            }).length, unit: `/${devices.filter(d => d.type === 'parent').length}`, color: 'var(--cyan)'
-          },
-          { label: 'Fan ON', value: devices.filter(d => controls[d.device_id]?.fan).length, unit: '', color: 'var(--cyan)' },
+          { label: t('dashboard.parentUnits'), value: devices.filter(d => d.type === 'parent').length, unit: '', color: 'var(--cyan)' },
+          { label: t('dashboard.childUnits'), value: devices.filter(d => d.type === 'child').length, unit: '', color: 'var(--amber)' },
         ].map((s, i) => (
           <Card key={s.label} className={`${styles.statCard} fade-up d${i + 1}`}>
             <div className={styles.statLabel}>{s.label}</div>

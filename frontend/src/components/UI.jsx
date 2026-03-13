@@ -1,5 +1,6 @@
 import styles from './UI.module.css'
-import { fmt } from '../utils'
+import { formatLocalizedDeviceName } from '../utils'
+import { useTranslation } from 'react-i18next'
 
 // ── MetricCard ─────────────────────────────────────────────────────────────
 export function MetricCard({ label, value, unit, icon, color, trend, sub, loading, delay = 0 }) {
@@ -25,12 +26,14 @@ export function MetricCard({ label, value, unit, icon, color, trend, sub, loadin
 
 // ── DeviceTabs ─────────────────────────────────────────────────────────────
 export function DeviceTabs({ devices, active, onChange }) {
+  const { t } = useTranslation()
+
   return (
     <div className={styles.deviceTabs}>
       {devices.map(d => {
         const isObj = typeof d === 'object'
         const id = isObj ? d.device_id : d
-        const name = isObj ? d.name : `Device ${d}`
+        const name = isObj ? (formatLocalizedDeviceName(d.name, t) || `${t('dashboard.device', 'Device')} ${id}`) : `${t('dashboard.device', 'Device')} ${d}`
         return (
           <button
             key={id}
@@ -72,20 +75,22 @@ export function Loader({ size = 'md' }) {
 
 // ── PageLoader ─────────────────────────────────────────────────────────────
 export function PageLoader() {
+  const { t } = useTranslation()
   return (
     <div className={styles.pageLoader}>
       <Loader size="lg" />
-      <span className={styles.pageLoaderText}>Loading data...</span>
+      <span className={styles.pageLoaderText}>{t('common.loadingData', 'Loading data...')}</span>
     </div>
   )
 }
 
 // ── EmptyState ─────────────────────────────────────────────────────────────
 export function EmptyState({ icon = '📭', title = 'No data', sub }) {
+  const { t } = useTranslation()
   return (
     <div className={styles.empty}>
       <div className={styles.emptyIcon}>{icon}</div>
-      <div className={styles.emptyTitle}>{title}</div>
+      <div className={styles.emptyTitle}>{title || t('common.noData', 'No data')}</div>
       {sub && <div className={styles.emptySub}>{sub}</div>}
     </div>
   )
@@ -98,11 +103,12 @@ export function Badge({ label, color = 'green' }) {
 
 // ── StatusPill ─────────────────────────────────────────────────────────────
 export function StatusPill({ status }) {
+  const { t } = useTranslation()
   const map = {
-    normal: { label: 'NORMAL', cls: 'green' },
-    high: { label: 'HIGH', cls: 'red' },
-    low: { label: 'LOW', cls: 'amber' },
-    unknown: { label: 'UNKNOWN', cls: 'muted' },
+    normal: { label: t('common.status.normal', 'NORMAL'), cls: 'green' },
+    high: { label: t('common.status.high', 'HIGH'), cls: 'red' },
+    low: { label: t('common.status.low', 'LOW'), cls: 'amber' },
+    unknown: { label: t('common.status.unknown', 'UNKNOWN'), cls: 'muted' },
   }
   const info = map[status] ?? map.unknown
   return <Badge label={info.label} color={info.cls} />

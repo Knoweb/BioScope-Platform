@@ -337,10 +337,13 @@
 .toggle {
   width: 46px;
   height: 26px;
+  min-height: 0;
   border-radius: 13px;
   background: var(--border-mid);
   position: relative;
   border: none;
+  padding: 0;
+  line-height: 1;
   transition: background 0.25s;
   flex-shrink: 0;
 }
@@ -384,6 +387,56 @@
 
 .toggleLabelOn {
   color: var(--green);
+}
+
+@media (max-width: 768px) {
+  .toggleWrap {
+    gap: 8px;
+  }
+
+  .toggle {
+    width: 40px;
+    height: 22px;
+    min-height: 0 !important;
+    border-radius: 11px;
+  }
+
+  .toggleThumb {
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .toggleOn .toggleThumb {
+    left: 21px;
+  }
+
+  .toggleLabel {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toggle {
+    width: 36px;
+    height: 20px;
+    min-height: 0 !important;
+    border-radius: 10px;
+  }
+
+  .toggleThumb {
+    width: 14px;
+    height: 14px;
+  }
+
+  .toggleOn .toggleThumb {
+    left: 19px;
+  }
+
+  .toggleLabel {
+    font-size: 10px;
+  }
 }
 
 /* ── ChartTimeSelector ── */

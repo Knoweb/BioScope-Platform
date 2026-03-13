@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useReadings, useDevices } from '../hooks'
-import { fmt, fmtDateTime, downloadCSV, downloadJSON, downloadPDF, downloadFullPDF } from '../utils'
+import { fmt, fmtDateTime, downloadCSV, downloadJSON, downloadPDF, downloadFullPDF, formatLocalizedDeviceName } from '../utils'
 import { readingsAPI } from '../api'
 import { Card, SectionHeader, Btn, Badge } from '../components/UI'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +19,7 @@ function DeviceReport({ deviceId, name, addToast }) {
   const { t } = useTranslation()
   const [exportRange, setExportRange] = useState(24)
   const [exporting, setExporting] = useState(null)
+  const displayName = formatLocalizedDeviceName(name, t) || t('reports.deviceTitle', { id: deviceId })
 
   const { data: rows, loading } = useReadings(deviceId, 200, 60000)
   const arr = Array.isArray(rows) ? rows : []
@@ -37,7 +38,7 @@ function DeviceReport({ deviceId, name, addToast }) {
 
   const handleExport = async (format) => {
     setExporting(format)
-    addToast(`Preparing ${format} report for ${name || deviceId}...`, 'info')
+    addToast(t('reports.preparingReport', { format, device: displayName }), 'info')
     try {
       const isParent = String(deviceId).startsWith('P')
       const sinceISO = new Date(Date.now() - exportRange * 60 * 60 * 1000).toISOString()
@@ -45,20 +46,20 @@ function DeviceReport({ deviceId, name, addToast }) {
 
       if (error) throw error
       if (!exportData || !exportData.length) {
-        addToast('No data found for the selected time range', 'warning')
+        addToast(t('reports.noDataSelectedRange'), 'warning')
         return
       }
 
-      const rangeLabel = exportRange === 1 ? 'Last 1 Hour' : exportRange === 24 ? 'Last 24 Hours' : 'Last 7 Days'
+      const rangeLabel = exportRange === 1 ? t('reports.last1Hour') : exportRange === 24 ? t('reports.last24Hours') : t('reports.last7Days')
       const filename = `bioscope_${deviceId}_${exportRange}h_${Date.now()}`
 
       if (format === 'CSV') downloadCSV(exportData, filename + '.csv')
       if (format === 'JSON') downloadJSON(exportData, filename + '.json')
-      if (format === 'PDF') downloadPDF(exportData, name || deviceId, rangeLabel, filename + '.pdf')
+      if (format === 'PDF') downloadPDF(exportData, displayName, rangeLabel, filename + '.pdf')
 
-      addToast(`Successfully exported ${exportData.length} records as ${format}`, 'success')
+      addToast(t('reports.exportedSuccess', { count: exportData.length, format }), 'success')
     } catch (e) {
-      addToast(`Export failed: ${e.message}`, 'error')
+      addToast(t('reports.exportFailed', { error: e.message }), 'error')
     } finally {
       setExporting(null)
     }
@@ -67,7 +68,7 @@ function DeviceReport({ deviceId, name, addToast }) {
   return (
     <Card className={`${styles.reportCard} fade-up`}>
       <div className={styles.reportHeader}>
-        <div className={styles.reportTitle}>{name || t('reports.deviceTitle', { id: deviceId })}</div>
+        <div className={styles.reportTitle}>{displayName}</div>
         <div className={styles.reportMeta}>
           <Badge label={t('reports.readingsCount', { count: arr.length })} color="cyan" />
           <Badge label={t('reports.online')} color="green" />
@@ -134,7 +135,7 @@ export default function Reports({ addToast }) {
 
   const exportAll = async () => {
     setExportingFull(true)
-    addToast('Generating full multi-device report... This may take a moment', 'info')
+    addToast(t('reports.generatingFull'), 'info')
 
     try {
       const sinceISO = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -144,19 +145,20 @@ export default function Reports({ addToast }) {
         const isParent = String(d.device_id).startsWith('P')
         const { data: rows, error } = await readingsAPI.getReadings(d.device_id, isParent, { limit: 10000, since: sinceISO })
         if (!error && rows && rows.length > 0) {
-          deviceDataList.push({ deviceId: d.name || d.device_id, name: d.name, rows })
+          const localizedName = formatLocalizedDeviceName(d.name, t) || d.device_id
+          deviceDataList.push({ deviceId: localizedName, name: localizedName, rows })
         }
       }
 
       if (deviceDataList.length === 0) {
-        addToast('No data found for any devices in the last 24 hours', 'warning')
+        addToast(t('reports.noFullData'), 'warning')
         return
       }
 
-      downloadFullPDF(deviceDataList, 'Last 24 Hours', `bioscope_full_report_${Date.now()}.pdf`)
-      addToast('Full fleet report generated successfully', 'success')
+      downloadFullPDF(deviceDataList, t('reports.last24Hours'), `bioscope_full_report_${Date.now()}.pdf`)
+      addToast(t('reports.fullGenerated'), 'success')
     } catch (e) {
-      addToast(`Full report failed: ${e.message}`, 'error')
+      addToast(t('reports.fullFailed', { error: e.message }), 'error')
     } finally {
       setExportingFull(false)
     }

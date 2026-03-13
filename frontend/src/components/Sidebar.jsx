@@ -1,4 +1,4 @@
-import { NavLink, Link, useLocation } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import styles from './Sidebar.module.css'
 
@@ -29,11 +29,11 @@ const NAV = [
 ]
 
 const BOTTOM_NAV = [
-  { to: '/', label: 'Home', icon: <DashIcon /> },
-  { to: '/sensors', label: 'Sensors', icon: <SensorIcon /> },
-  { to: '/controls', label: 'Controls', icon: <ControlIcon /> },
-  { to: '/devices', label: 'Devices', icon: <DeviceIcon /> },
-  { to: '/alerts', label: 'Alerts', icon: <AlertIcon /> },
+  { to: '/', labelKey: 'home', icon: <DashIcon /> },
+  { to: '/sensors', labelKey: 'sensors', icon: <SensorIcon /> },
+  { to: '/controls', labelKey: 'controls', icon: <ControlIcon /> },
+  { to: '/devices', labelKey: 'devices', icon: <DeviceIcon /> },
+  { to: '/alerts', labelKey: 'alerts', icon: <AlertIcon /> },
 ]
 
 export default function Sidebar({ mobileOpen, onClose }) {
@@ -99,7 +99,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
       </div>
     </aside>
     <nav className={styles.bottomNav} aria-label="Mobile navigation">
-      {BOTTOM_NAV.map(({ to, label, icon }) => (
+      {BOTTOM_NAV.map(({ to, labelKey, icon }) => (
         <NavLink
           key={to}
           to={to}
@@ -109,7 +109,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
           }
         >
           <span className={styles.bottomNavIcon}>{icon}</span>
-          <span className={styles.bottomNavLabel}>{label}</span>
+          <span className={styles.bottomNavLabel}>{t(`nav.${labelKey}`)}</span>
         </NavLink>
       ))}
     </nav>
