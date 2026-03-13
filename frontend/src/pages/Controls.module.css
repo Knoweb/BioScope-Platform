@@ -287,3 +287,55 @@
     font-size: 16px;
   }
 }
+
+/* ── Page header stack on mobile ─────────────────────────────────── */
+.pageHeader {
+  /* inline styles already set flex + space-between — only mobile overrides needed */
+}
+
+/* ── Mode buttons row ──────────────────────────────────────────── */
+.modeBtnRow button {
+  min-height: 36px;
+}
+
+/* ── Slot pill buttons row ────────────────────────────────────── */
+.slotPillRow button {
+  min-height: 36px;
+}
+
+@media (max-width: 768px) {
+  /* Touch targets: mode buttons — min-height won't conflict with inline padding */
+  .modeBtnRow button {
+    min-height: 44px;
+  }
+
+  /* Touch targets: slot pill buttons */
+  .slotPillRow button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Stack page header vertically */
+  .pageHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Sensor metrics: prevent chips from overflowing */
+  .page > div[style*="flex"] {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 375px) {
+  .page {
+    padding: 10px;
+    gap: 14px;
+  }
+
+  .modeBtnRow button {
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+  }
+}

@@ -27,12 +27,34 @@
 .addActions { display: flex; gap: 8px; }
 .addHint { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); }
 
+.typeGrid { /* columns set inline */ }
+.formGrid { /* columns set inline */ }
+
 @media (max-width: 900px) { .devGrid { grid-template-columns: 1fr; } .addForm { flex-direction: column; align-items: stretch; } .page { padding: 16px; } }
 
 @media (max-width: 640px) {
   .page { padding: 12px; }
   .devId { font-size: 32px; }
   .devName { font-size: 16px; }
-  .devActions { flex-direction: column; }
-  .pageActions { flex-direction: column; }
+  /* wrap action buttons instead of full-width column */
+  .devActions { flex-wrap: wrap; }
+  .pageActions { flex-wrap: wrap; }
+  /* type picker and form inputs: single column */
+  .typeGrid { grid-template-columns: 1fr !important; }
+  .formGrid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 768px) {
+  /* Touch targets for dev action buttons */
+  .devActions > * { min-height: 44px; }
+  .pageActions > * { min-height: 44px; }
+  .addActions > * { min-height: 44px; }
+  .input { min-height: 44px; padding: 0 14px; font-size: 15px; }
+}
+
+@media (max-width: 375px) {
+  .page { padding: 10px; gap: 14px; }
+  .devId { font-size: 26px; }
+  .devName { font-size: 14px; }
+  .devType { font-size: 12px; }
 }

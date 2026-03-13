@@ -39,11 +39,25 @@
 @media (max-width: 640px) {
   .page { padding: 12px; }
   .statGrid { grid-template-columns: 1fr; }
-  .topActions { flex-direction: column; }
+  /* stack buttons but allow wrapping so they don't stretch full-width when 2 fit */
+  .topActions { flex-wrap: wrap; }
   .reportTitle { font-size: 16px; }
   .statVal { font-size: 22px; }
+  .exportOption { gap: 10px; }
+  .exportIcon { font-size: 22px; width: 32px; }
+  .exportFormat { font-size: 14px; }
+  .exportDesc { font-size: 12px; }
 }
 
-@media (max-width: 900px) {
-  .reportGrid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  /* Touch targets for top action buttons */
+  .topActions > * {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 375px) {
+  .page { padding: 10px; gap: 14px; }
+  .statVal { font-size: 18px; }
+  .statBox { padding: 10px 12px; }
 }

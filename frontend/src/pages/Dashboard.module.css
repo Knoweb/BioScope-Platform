@@ -374,15 +374,59 @@
     gap: 12px;
   }
 
+  /* 2 slot tiles sit side-by-side on mobile */
+  .actuatorTilesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* keep 2x2 grid on mobile — 1 column is too tall */
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .deviceCard {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .deviceId {
+    font-size: 18px;
+  }
+
+  .metricTileVal {
+    font-size: 26px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  /* Prevent mode switch overflowing narrow screens */
+  .modeSwitchContainer {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 375px) {
+  .page {
+    padding: 12px;
+  }
+
+  .deviceCard {
+    padding: 14px;
+  }
+
+  /* Stack actuator tiles vertically on very small phones */
   .actuatorTilesGrid {
     grid-template-columns: 1fr;
   }
 
-  .statsRow {
-    grid-template-columns: 1fr;
+  .metricTileVal {
+    font-size: 22px;
   }
 
-  .deviceCard {
-    padding: 20px;
+  .statValue {
+    font-size: 24px;
   }
 }

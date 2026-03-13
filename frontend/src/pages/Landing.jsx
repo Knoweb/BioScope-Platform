@@ -52,6 +52,8 @@ export default function Landing() {
                 <h1 className={styles.title}>{t('landing.title')}</h1>
                 <p className={styles.subtitle}>{t('landing.subtitle')}</p>
 
+                <p className={styles.heroNote}>{t('landing.heroNote')}</p>
+
                 <Link to="/signup" className={styles.ctaBtn}>
                     {t('landing.signUp')}
                     <span style={{ fontSize: '1.2em' }}>→</span>

@@ -179,6 +179,25 @@
   color: var(--text-muted);
 }
 
+@media (max-width: 768px) {
+  /* Touch targets for alert ack buttons and rule toggle buttons */
+  .alertRow > button,
+  .ruleRow > button,
+  .ruleRow button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 375px) {
+  .page { padding: 10px; gap: 14px; }
+  .alertRow { padding: 12px 14px; gap: 8px; }
+  .alertTitle { font-size: 13px; }
+  .alertDetail { font-size: 11px; }
+  .ruleName { font-size: 13px; }
+  .ruleCond { font-size: 12px; }
+}
+
 /* Channels */
 .channels {
   display: flex;

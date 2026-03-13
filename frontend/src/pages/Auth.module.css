@@ -468,6 +468,39 @@
   }
 }
 
+@media (max-width: 375px) {
+  .authCard {
+    padding: 1.25rem 0.875rem;
+    border-radius: 12px;
+  }
+
+  .authTitle {
+    font-size: 1.35rem;
+  }
+
+  .authSubtitle {
+    font-size: 0.78rem;
+  }
+
+  /* Explicit min-height for touch targets */
+  .formInput {
+    min-height: 44px;
+    padding: 0 0.875rem;
+    font-size: 0.9rem;
+  }
+
+  .submitBtn {
+    min-height: 44px;
+    padding: 0 1rem;
+    font-size: 0.9rem;
+  }
+
+  .authFooter {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
 /* Animations */
 @keyframes fadeUp {
   from {

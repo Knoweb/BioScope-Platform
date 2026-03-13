@@ -3,7 +3,6 @@
     display: flex;
     flex-direction: column;
     background-image:
-        linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(11, 26, 17, 0.8)),
         url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=2574&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
@@ -124,48 +123,52 @@
     max-width: 900px;
     width: 90%;
     margin: 180px auto 80px auto;
-    background: rgba(11, 26, 17, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
     border-radius: 24px;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 .tagline {
-    /* Japanese traditional Gold / Yamabuki color */
     color: #F8E287;
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 16px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    margin-bottom: 24px;
-    background: rgba(248, 226, 135, 0.08);
-    padding: 8px 16px;
+    margin-bottom: 28px;
+    background: rgba(248, 226, 135, 0.12);
+    padding: 10px 20px;
     border-radius: 20px;
-    border: 1px solid rgba(248, 226, 135, 0.2);
+    border: 1px solid rgba(248, 226, 135, 0.3);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
 
 .title {
-    font-size: 56px;
+    font-size: 68px;
     font-weight: 800;
-    /* Japanese Sakura pink to White gradient */
     background: linear-gradient(135deg, #FFFFFF 20%, #FFB7C5 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    line-height: 1.1;
+    line-height: 1.08;
     margin-bottom: 24px;
-    /* Soft glow for text */
-    filter: drop-shadow(0 4px 16px rgba(255, 183, 197, 0.25));
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.7)) drop-shadow(0 2px 8px rgba(255, 183, 197, 0.3));
 }
 
 .subtitle {
-    font-size: 20px;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.6;
-    margin-bottom: 48px;
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.65;
+    margin-bottom: 36px;
     max-width: 700px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.7);
+}
+
+.heroNote {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 36px;
+    max-width: 480px;
+    line-height: 1.5;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
 }
 
 .ctaBtn {
@@ -276,7 +279,7 @@
     }
 
     .title {
-        font-size: 44px;
+        font-size: 52px;
     }
 }
 
@@ -301,11 +304,79 @@
         padding: 60px 20px;
     }
 
-    .title {
-        font-size: 36px;
+    .hero {
+        width: 100%;
+        max-width: 100%;
+        /* 68px navbar + 12px visible gap of background */
+        margin: 80px 0 0 0;
+        min-height: calc(100svh - 80px);
+        border-radius: 0;
+        border: none;
+        padding: 44px 28px 52px;
+        justify-content: center;
     }
 
+    .tagline {
+        font-size: 13px;
+        letter-spacing: 2px;
+        padding: 8px 18px;
+        margin-bottom: 24px;
+    }
+
+    .title {
+        font-size: 42px;
+        margin-bottom: 20px;
+    }
+
+    .subtitle {
+        font-size: 18px;
+        line-height: 1.65;
+        margin-bottom: 28px;
+    }
+
+    .heroNote {
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    .ctaBtn {
+        padding: 15px 36px;
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 480px) {
     .hero {
-        padding: 140px 20px 60px;
+        /* 64px navbar + 8px gap */
+        margin: 72px 0 0 0;
+        min-height: calc(100svh - 72px);
+        padding: 36px 22px 44px;
+    }
+
+    .tagline {
+        font-size: 12px;
+        letter-spacing: 1.5px;
+        padding: 7px 14px;
+        margin-bottom: 20px;
+    }
+
+    .title {
+        font-size: 36px;
+        margin-bottom: 16px;
+    }
+
+    .subtitle {
+        font-size: 17px;
+        margin-bottom: 24px;
+    }
+
+    .heroNote {
+        font-size: 13px;
+        margin-bottom: 28px;
+    }
+
+    .ctaBtn {
+        padding: 14px 32px;
+        font-size: 16px;
     }
 }

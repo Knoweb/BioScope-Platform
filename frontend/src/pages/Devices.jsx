@@ -68,7 +68,7 @@ export default function Devices({ addToast }) {
         <Card className={`${styles.addCard} fade-up`} style={{ border: '2px dashed var(--border-mid)' }}>
           <SectionHeader title={t('devices.registerNewTitle')} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+          <div className={styles.typeGrid} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
             <div
               onClick={() => setAddMode('parent')}
               style={{
@@ -95,7 +95,7 @@ export default function Devices({ addToast }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', width: '100%' }}>
+            <div className={styles.formGrid} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', width: '100%' }}>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>{t('devices.deviceIdLabel')}</label>
                 <input

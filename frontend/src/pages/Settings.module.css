@@ -22,31 +22,52 @@
     padding: 16px;
     max-width: 100%;
   }
-  
+
   .accountRow {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .saveRow {
     flex-direction: column;
   }
+
+  /* Touch targets */
+  .select { min-height: 44px; padding: 0 14px; }
+  .unitBtn { min-height: 44px; padding: 0 18px; }
+  .saveRow > * { min-height: 44px; }
+  .logoutRow > * { min-height: 44px; }
 }
 
 @media (max-width: 640px) {
   .page { padding: 12px; }
-  
+
   .select {
     min-width: 100px;
     font-size: 13px;
   }
-  
+
   .avatar {
     width: 48px;
     height: 48px;
     font-size: 18px;
   }
-  
+
   .accountName { font-size: 16px; }
   .accountEmail { font-size: 12px; }
+
+  /* Stack setting rows on narrow screens */
+  .settingRow {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .page { padding: 10px; gap: 14px; }
+  .accountName { font-size: 14px; }
+  .accountEmail { font-size: 11px; }
+  .select { font-size: 12px; }
+  .unitBtn { font-size: 13px; }
 }

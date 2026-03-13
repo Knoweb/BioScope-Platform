@@ -204,3 +204,38 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 768px) {
+  /* Touch targets — sort + export buttons */
+  .sortBtn {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  /* Pagination touch targets */
+  .paginBtn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 375px) {
+  .page {
+    padding: 10px;
+    gap: 14px;
+  }
+
+  .table {
+    font-size: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 6px 8px;
+  }
+
+  .val {
+    font-size: 11px;
+  }
+}

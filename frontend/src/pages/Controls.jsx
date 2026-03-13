@@ -143,7 +143,7 @@ function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, isLoading, on
         <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>
           Plugged-in device:
         </div>
-        <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
+        <div className={styles.slotPillRow} style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
           {allDevices.map(key => {
             const d = DEVICE_INFO[key]
             const selected = key === assignedDevice
@@ -352,7 +352,7 @@ export default function Controls({ addToast }) {
   return (
     <div className={styles.page}>
       {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className={styles.pageHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>Device Controls</h1>
           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 4 }}>
@@ -391,7 +391,7 @@ export default function Controls({ addToast }) {
       <Card className="fade-up d1" style={{ padding: '0.75rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: 500 }}>Control Mode</span>
-          <div style={{ display: 'flex', gap: '0.35rem' }}>
+          <div className={styles.modeBtnRow} style={{ display: 'flex', gap: '0.35rem' }}>
             <button
               onClick={() => !sensorStatus.canOverride && switchMode('auto')}
               disabled={sensorStatus.canOverride}

@@ -15,7 +15,10 @@ export default function Topbar({ onRefresh, lastUpdate, onToggleMenu }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
 
-  const info = t(`topbar.titles.${pathname}`, { returnObjects: true }) || t(`topbar.titles./`, { returnObjects: true })
+  // Normalise: i18next v25 may return a string/null for unknown paths;
+  // ensure we always have a plain object with string label/sub.
+  const rawInfo = t(`topbar.titles.${pathname}`, { returnObjects: true }) || t(`topbar.titles./`, { returnObjects: true })
+  const info = (rawInfo !== null && typeof rawInfo === 'object' && !Array.isArray(rawInfo)) ? rawInfo : {}
   const now = lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '—'
 
   // Close menu when clicking outside
@@ -30,7 +33,7 @@ export default function Topbar({ onRefresh, lastUpdate, onToggleMenu }) {
   }, [])
 
   const handleLogout = async () => {
-    await logout()
+    try { await logout() } catch { /* ignore */ }
     navigate('/login')
   }
 

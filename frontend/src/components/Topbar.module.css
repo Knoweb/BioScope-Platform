@@ -259,33 +259,48 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin-right: 2px;
+    padding: 0;
   }
 
   .left {
     flex: 1;
+    min-width: 0;
   }
 
   .title {
     font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sub {
     font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .right {
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   .refreshBtn {
-    padding: 8px 12px;
+    padding: 0 12px;
     font-size: 12px;
+    min-height: 44px;
   }
 
   .avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
@@ -327,14 +342,15 @@
   }
 
   .refreshBtn {
-    padding: 7px;
-    min-width: 36px;
+    padding: 0;
+    min-width: 44px;
+    min-height: 44px;
     justify-content: center;
   }
 
   .avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 9px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 12px;
   }
 }

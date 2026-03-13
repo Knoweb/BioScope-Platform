@@ -28,10 +28,19 @@ const NAV = [
   }
 ]
 
+const BOTTOM_NAV = [
+  { to: '/', label: 'Home', icon: <DashIcon /> },
+  { to: '/sensors', label: 'Sensors', icon: <SensorIcon /> },
+  { to: '/controls', label: 'Controls', icon: <ControlIcon /> },
+  { to: '/devices', label: 'Devices', icon: <DeviceIcon /> },
+  { to: '/alerts', label: 'Alerts', icon: <AlertIcon /> },
+]
+
 export default function Sidebar({ mobileOpen, onClose }) {
   const { t } = useTranslation()
 
   return (
+    <>
     <aside className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}>
       {/* Mobile close button */}
       <button className={styles.mobileCloseBtn} onClick={onClose}>
@@ -89,6 +98,22 @@ export default function Sidebar({ mobileOpen, onClose }) {
         <div className={styles.footerVersion}>v1.0.0</div>
       </div>
     </aside>
+    <nav className={styles.bottomNav} aria-label="Mobile navigation">
+      {BOTTOM_NAV.map(({ to, label, icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={to === '/'}
+          className={({ isActive }) =>
+            `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
+          }
+        >
+          <span className={styles.bottomNavIcon}>{icon}</span>
+          <span className={styles.bottomNavLabel}>{label}</span>
+        </NavLink>
+      ))}
+    </nav>
+    </>
   )
 }
 

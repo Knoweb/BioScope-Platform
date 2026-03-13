@@ -1,7 +1,7 @@
 [
   {
     "actuator_id": "487dc7aa-8deb-4cfd-9dd8-5090cc6a124b",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "LED Light",
     "type": "pwm",
     "description": "LED grow light",
@@ -18,7 +18,7 @@
   },
   {
     "actuator_id": "ecc12b69-cea1-47c4-9390-13d89c93e7f9",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Fan",
     "type": "relay",
     "description": null,
@@ -35,7 +35,7 @@
   },
   {
     "actuator_id": "da1903d1-5326-4b95-af4c-d4c9250bbc5e",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Heater",
     "type": "relay",
     "description": null,
@@ -52,7 +52,7 @@
   },
   {
     "actuator_id": "aa90525f-ea26-4df8-aa4a-22c4a5bb2427",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "LED Light",
     "type": "pwm",
     "description": null,
@@ -69,7 +69,7 @@
   },
   {
     "actuator_id": "79fb6e80-ed2d-4915-8504-959820c86769",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Fan",
     "type": "relay",
     "description": null,
@@ -86,7 +86,7 @@
   },
   {
     "actuator_id": "2e40fb41-3bcd-425c-bf39-53da21d9512d",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Heater",
     "type": "relay",
     "description": null,
@@ -103,7 +103,7 @@
   },
   {
     "actuator_id": "ad8b9ee9-4618-43bf-8a40-074350b8293d",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "LED Light",
     "type": "pwm",
     "description": null,
@@ -120,7 +120,7 @@
   },
   {
     "actuator_id": "d908b522-a7f1-4fc2-bd6f-a3c21b7cdade",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Fan",
     "type": "relay",
     "description": null,
@@ -137,7 +137,7 @@
   },
   {
     "actuator_id": "697392d9-00bd-46e0-adf4-33cbbd9faf8c",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "Heater",
     "type": "relay",
     "description": null,
@@ -154,7 +154,7 @@
   },
   {
     "actuator_id": "4cb908ae-13bb-488f-b24e-0d049a3fe517",
-    "device_id": "P2",
+    "device_id": "P1",
     "name": "LED Light",
     "type": "pwm",
     "description": null,

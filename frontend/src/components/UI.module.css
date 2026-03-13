@@ -99,6 +99,12 @@
   .metricIcon {
     font-size: 16px;
   }
+
+  /* Touch targets for device tab buttons */
+  .deviceTab {
+    min-height: 44px;
+    padding: 0 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -119,6 +125,7 @@
 .deviceTabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
@@ -127,6 +134,7 @@
   align-items: center;
   gap: 7px;
   padding: 7px 16px;
+  min-height: 36px;
   border-radius: var(--r-sm);
   border: 1px solid var(--border-mid);
   font-size: 12px;
@@ -135,6 +143,7 @@
   color: var(--text-muted);
   background: transparent;
   transition: all 0.18s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .deviceTab:hover {

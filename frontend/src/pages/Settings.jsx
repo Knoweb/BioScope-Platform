@@ -176,7 +176,7 @@ export default function Settings({ addToast }) {
 
 function SettingRow({ label, desc, children }) {
   return (
-    <div style={{
+    <div className={styles.settingRow} style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '16px 0', borderBottom: '1px solid var(--border-subtle)', gap: 16
     }}>

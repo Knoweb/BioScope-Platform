@@ -33,14 +33,21 @@ export const authAPI = {
 
   // Sign out → clears token
   signOut: async () => {
-    try {
-      await api.post('/auth/signout')
-    } catch (_) {
-      // Even if backend call fails, clear local tokens
-    } finally {
-      clearToken()
-      localStorage.removeItem('bioscope_refresh_token')
+    const token = localStorage.getItem('bioscope_token')
+    // Only call the backend if we have a token that isn't already expired.
+    // Skipping a known-expired token avoids a visible 401 in the console.
+    const isExpired = !token || (() => {
+      try {
+        const { exp } = JSON.parse(atob(token.split('.')[1]))
+        return Date.now() >= exp * 1000
+      } catch { return true }
+    })()
+
+    if (!isExpired) {
+      try { await api.post('/auth/signout') } catch { /* ignore — just clear locally */ }
     }
+    clearToken()
+    localStorage.removeItem('bioscope_refresh_token')
     return { error: null }
   },
 
