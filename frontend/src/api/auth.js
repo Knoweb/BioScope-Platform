@@ -75,6 +75,16 @@ export const authAPI = {
     }
   },
 
+  // Delete own account permanently
+  deleteMe: async () => {
+    try {
+      await api.delete('/auth/me')
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  },
+
   // Send password reset email
   resetPassword: async (email) => {
     try {

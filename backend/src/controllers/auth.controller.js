@@ -72,9 +72,30 @@ export const refreshToken = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   try {
     const { email } = req.body
-    if (!email) return res.status(400).json({ error: 'email is required' })
+    const normalizedEmail = email?.trim().toLowerCase()
+    if (!normalizedEmail) return res.status(400).json({ error: 'email is required' })
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Explicitly verify email exists before sending reset link.
+    let userExists = false
+    let page = 1
+    const perPage = 1000
+
+    while (!userExists) {
+      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers({ page, perPage })
+      if (usersError) return res.status(400).json({ error: usersError.message })
+
+      const users = usersData?.users || []
+      userExists = users.some((user) => (user.email || '').toLowerCase() === normalizedEmail)
+
+      if (userExists || users.length < perPage) break
+      page += 1
+    }
+
+    if (!userExists) {
+      return res.status(404).json({ error: 'Not existing email, enter correct email address.' })
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: `${process.env.FRONTEND_URL}/reset-password`
     })
     if (error) return res.status(400).json({ error: error.message })
@@ -104,5 +125,14 @@ export const updateMe = async (req, res, next) => {
     if (error) return res.status(400).json({ error: error.message })
 
     return res.json({ user: data.user })
+  } catch (err) { next(err) }
+}
+
+// DELETE /api/auth/me  (self-delete)
+export const deleteMe = async (req, res, next) => {
+  try {
+    const { error } = await supabase.auth.admin.deleteUser(req.user.id)
+    if (error) return res.status(400).json({ error: error.message })
+    return res.status(204).send()
   } catch (err) { next(err) }
 }

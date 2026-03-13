@@ -26,13 +26,18 @@
   /* make room for the eye button */
 }
 
+.inputWrapper .formInput::-ms-reveal,
+.inputWrapper .formInput::-ms-clear {
+  display: none;
+}
+
 .eyeBtn {
   position: absolute;
   right: 0.75rem;
   background: none;
   border: none;
   cursor: pointer;
-  color: #888;
+  color: #2e7d32;
   display: flex;
   align-items: center;
   padding: 0;
@@ -41,6 +46,11 @@
 }
 
 .eyeBtn:hover {
+  color: #4caf50;
+}
+
+.eyeBtn:focus-visible {
+  outline: none;
   color: #4caf50;
 }
 
@@ -208,6 +218,26 @@
 
 .formInput::placeholder {
   color: rgba(46, 125, 50, 0.5);
+}
+
+.infoMessage,
+.errorMessage {
+  padding: 0.85rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.infoMessage {
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+  color: #c8e6c9;
+}
+
+.errorMessage {
+  background: rgba(229, 57, 53, 0.12);
+  border: 1px solid rgba(229, 57, 53, 0.3);
+  color: #ffcdd2;
 }
 
 .formActions {

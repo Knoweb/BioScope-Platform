@@ -84,8 +84,17 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }, [])
 
+  // ── Delete account ──────────────────────────────────────────────────────────
+  const deleteAccount = useCallback(async () => {
+    const { error } = await authAPI.deleteMe()
+    if (error) return { error }
+    authAPI.signOut()
+    setUser(null)
+    return { error: null }
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateProfile, deleteAccount }}>
       {!loading && children}
     </AuthContext.Provider>
   )

@@ -17,6 +17,8 @@ import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Landing from './pages/Landing'
 
 import styles from './App.module.css'
@@ -95,6 +97,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login onLogin={login} addToast={addToast} />} />
           <Route path="/signup" element={<Signup addToast={addToast} />} />
+          <Route path="/forgot-password" element={<ForgotPassword addToast={addToast} />} />
+          <Route path="/reset-password" element={<ResetPassword addToast={addToast} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toast toasts={toasts} />

@@ -4,10 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { Card, SectionHeader, Toggle, Btn, Badge } from '../components/UI'
 import { useTranslation } from 'react-i18next'
+import { useDevices } from '../hooks'
+import { readingsAPI } from '../api'
+import { downloadJSON } from '../utils'
 import styles from './Settings.module.css'
 
 export default function Settings({ addToast }) {
-  const { user, logout, updateProfile } = useAuth()
+  const { user, logout, updateProfile, deleteAccount } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
@@ -58,6 +61,48 @@ export default function Settings({ addToast }) {
     logout()
     addToast(t('settings.loggedOut', 'Logged out successfully'), 'success')
     navigate('/login')
+  }
+
+  const { devices } = useDevices()
+  const [exporting, setExporting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const handleExportAll = async () => {
+    setExporting(true)
+    addToast(t('settings.exportInitiated', 'Preparing export...'), 'info')
+    try {
+      const allData = {}
+      for (const d of devices) {
+        const isParent = String(d.device_id).startsWith('P')
+        const { data: rows, error } = await readingsAPI.getReadings(d.device_id, isParent, { limit: 50000 })
+        if (!error && rows?.length) allData[d.device_id] = rows
+      }
+      if (Object.keys(allData).length === 0) {
+        addToast(t('settings.exportNoData', 'No data found to export'), 'warning')
+        return
+      }
+      downloadJSON({ exported_at: new Date().toISOString(), devices: allData }, `bioscope_all_data_${Date.now()}.json`)
+      const total = Object.values(allData).reduce((s, r) => s + r.length, 0)
+      addToast(t('settings.exportSuccess', { total, defaultValue: `Exported ${total} records` }), 'success')
+    } catch (e) {
+      addToast(t('settings.exportFailed', { error: e.message, defaultValue: `Export failed: ${e.message}` }), 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setConfirmDelete(false)
+    setDeleting(true)
+    const { error } = await deleteAccount()
+    setDeleting(false)
+    if (error) {
+      addToast(t('settings.deleteFailed', { reason: error.message || error, defaultValue: `Delete failed: ${error.message || error}` }), 'error')
+    } else {
+      addToast(t('settings.deleteSuccess', 'Account deleted successfully'), 'success')
+      navigate('/login')
+    }
   }
 
   const handleThemeToggle = () => {
@@ -139,10 +184,10 @@ export default function Settings({ addToast }) {
             </select>
           </SettingRow>
           <SettingRow label={t('settings.exportData')} desc={t('settings.exportDataDesc')}>
-            <Btn onClick={() => addToast(t('settings.exportInitiated', 'Export initiated'), 'info')} icon="⬇" variant="secondary">{t('settings.export')}</Btn>
+            <Btn onClick={handleExportAll} loading={exporting} icon="⬇" variant="secondary">{t('settings.export')}</Btn>
           </SettingRow>
           <SettingRow label={t('settings.deleteAccount')} desc={t('settings.deleteAccountDesc')}>
-            <Btn onClick={() => addToast(t('settings.deleteDisabled', 'This action is disabled in demo'), 'error')} variant="danger">{t('settings.delete')}</Btn>
+            <Btn onClick={() => setConfirmDelete(true)} loading={deleting} variant="danger">{t('settings.delete')}</Btn>
           </SettingRow>
         </div>
       </Card>
@@ -164,6 +209,19 @@ export default function Settings({ addToast }) {
           <Btn onClick={handleLogout} variant="secondary" icon="🚪">{t('settings.logout')}</Btn>
         </div>
       </Card>
+
+      {confirmDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '32px 28px', maxWidth: 400, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>{t('settings.deleteConfirmTitle', 'Delete Account?')}</div>
+            <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>{t('settings.deleteConfirmMsg', 'This will permanently delete your account and all associated data. This action cannot be undone.')}</div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <Btn variant="secondary" onClick={() => setConfirmDelete(false)}>{t('settings.deleteConfirmCancel', 'Cancel')}</Btn>
+              <Btn variant="danger" onClick={handleDeleteAccount}>{t('settings.deleteConfirmBtn', 'Yes, Delete')}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.saveRow}>
         <Btn onClick={save} variant="primary" icon="✓" disabled={saving}>

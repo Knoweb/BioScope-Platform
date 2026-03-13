@@ -11,9 +11,9 @@ router.get('/:id', getDeviceById)
 router.get('/:id/summary', getDeviceSummary)
 router.get('/:id/slots', getSlotAssignment)
 router.get('/:id/latest-state', getLatestControlState)
-router.patch('/:id/slots', requireRole('admin', 'operator'), updateSlotAssignment)
+router.patch('/:id/slots', requireRole('admin', 'operator', 'owner', 'user'), updateSlotAssignment)
 router.post('/', requireRole('admin', 'operator'), createDevice)
-router.patch('/:id', requireRole('admin', 'operator'), updateDevice)
+router.patch('/:id', requireRole('admin', 'operator', 'owner', 'user'), updateDevice)
 router.delete('/:id', requireRole('admin'), deleteDevice)
 
 export default router
