@@ -1,171 +1,435 @@
-# 🔬 BioScope — Environmental Monitor
+# BioScope
 
-A full-featured React.js frontend for the BioScope IoT environmental monitoring system with authentication, real-time data visualization, and remote device control.
+BioScope is an IoT environmental monitoring and control platform for managing temperature, humidity, and light conditions across multiple growing units.
 
-## ✨ Features
+The project includes:
+- a React frontend for dashboards, controls, reports, and user management
+- an Express backend API connected to Supabase
+- a PostgreSQL data model for devices, readings, alerts, automation, and audit history
 
-- **🔐 Authentication System**: Login/Signup pages with protected routes
-- **📊 Real-time Monitoring**: Live sensor data with auto-refresh
-- **🎨 Enhanced UI**: Improved readability with larger fonts and lighter color scheme
-- **📈 Data Visualization**: Interactive charts using Recharts
-- **🎛️ Device Control**: Remote actuator management
-- **🔔 Alert Management**: Configurable thresholds and notifications
-- **📱 Responsive Design**: Mobile-optimized interface
-- **🌐 Supabase Ready**: Pre-configured for Supabase integration
+## Overview
 
-## Stack
-- **React 18** + **React Router v6** — SPA with client-side routing
-- **Recharts** — Area/line charts for sensor data
-- **Vite** — Fast dev server and build tool
-- **CSS Modules** — Scoped, maintainable styles
-- **date-fns** — Date formatting
-- **Supabase** (optional) — Backend as a Service
+BioScope is built around a parent and child unit model:
+- Parent units act as the main control hubs
+- Child units represent monitored chambers or boxes
+- Sensors collect environmental data from child units
+- Actuators such as fans, heaters, and lights are controlled manually or automatically
+- Alert and automation rules react to environmental changes
+
+The platform supports:
+- live monitoring
+- historical charts and reporting
+- manual actuator control
+- rule-based automation
+- alert acknowledgment and resolution
+- role-based access and audit tracking
 
 ## Project Structure
 
-```
-src/
-├── api/          # API client (all fetch calls in one place)
-├── components/   # Reusable UI components
-│   ├── Sidebar   # Navigation
-│   ├── Topbar    # Header bar
-│   ├── Charts    # Recharts wrappers
-│   ├── Toast     # Notification system
-│   └── UI        # MetricCard, Toggle, Badge, etc.
-├── contexts/     # React Context providers
-│   └── AuthContext  # Authentication state management
-├── hooks/        # Custom React hooks (useReadings, useControls, useAuth, etc.)
-├── lib/          # Third-party integrations
-│   └── supabase  # Supabase client setup
-├── pages/        # One file per route
-│   ├── Login       # User login
-│   ├── Signup      # User registration
-│   ├── Dashboard   # Main overview
-│   ├── Sensors     # Sensor readings
-│   ├── Controls    # Device control
-│   ├── History     # Historical data
-│   ├── Reports     # Data reports
-│   ├── Devices     # Device management
-│   ├── Alerts      # Alert configuration
-│   └── Settings    # User settings & logout
-├── styles/       # global.css design tokens
-└── utils/        # Formatters, helpers, CSV/JSON export
-```
-
-## Pages & Features
-
-| Route       | Description | Status |
-|-------------|-------------|--------|
-| `/login`    | User authentication | ✅ |
-| `/signup`   | User registration | ✅ |
-| `/`         | Dashboard — live overview of all devices, quick controls, active alerts | ✅ |
-| `/sensors`  | Per-device metrics + interactive area/line charts (1H / 24H range) | ✅ |
-| `/controls` | Toggle Fan, Heater, Light per device; automation rules overview | ✅ |
-| `/history`  | Paginated data table with search, sort, CSV/JSON export | ✅ |
-| `/reports`  | Per-device stats (avg/min/max) and export options | ✅ |
-| `/devices`  | Device registry with full hardware details, register new device | ✅ |
-| `/alerts`   | Live alerts, configurable alert rules, notification channel status | ✅ |
-| `/settings` | Preferences, notification toggles, data retention, account info, logout | ✅ |
-
-## API Endpoints Used
-
-```
-BASE: https://wqhbf9x6-3000.asse.devtunnels.ms
-
-GET  /api/readings/:deviceId?limit=n   — Fetch latest sensor readings
-GET  /api/audit/:deviceId/hour|day     — Historical audit data
-GET  /api/controls                      — All device control states
-POST /api/controls/:deviceId           — Update actuator (fan/heater/light)
+```text
+BioScope/
+├── backend/                    # Express API server
+│   ├── src/
+│   │   ├── config/             # Supabase config
+│   │   ├── controllers/        # Resource controllers
+│   │   ├── middleware/         # Auth, error handling, 404
+│   │   ├── routes/             # API route definitions
+│   │   └── index.js            # API entry point
+│   ├── package.json
+│   └── README.md
+├── frontend/                   # React + Vite frontend
+│   ├── src/
+│   │   ├── api/                # API wrappers
+│   │   ├── components/         # Shared UI components
+│   │   ├── contexts/           # Auth and theme context
+│   │   ├── hooks/              # Custom hooks
+│   │   ├── lib/                # Supabase and app integrations
+│   │   ├── pages/              # Route-level pages
+│   │   ├── styles/             # Global styles
+│   │   └── utils/              # Formatters and helpers
+│   ├── package.json
+│   ├── README.md
+│   └── SETUP-GUIDE.md
+├── DATABASE-README.md          # Technical database schema reference
+├── DATABASE-CLIENT-README.md   # Client-facing database definitions
+└── README.md                   # Project overview
 ```
 
-## Getting Started
+## Main Features
+
+### Monitoring
+- Live temperature, humidity, and light monitoring
+- Device-level dashboards and summaries
+- Latest reading views and historical chart data
+- Device online and offline visibility
+
+### Control
+- Manual control of fans, heaters, and lights
+- Slot-based actuator assignment per device
+- Control action history and status tracking
+- Parent unit auto and manual control modes
+
+### Automation
+- Rule-based automatic actuator control
+- Priority-based child unit evaluation
+- Dead-band style state preservation
+- Mutual exclusion handling for fan and heater
+
+### Alerts
+- Configurable alert rules
+- Active and historical alert tracking
+- Acknowledge and resolve flows
+- Severity levels and notification channel support
+
+### Users
+- Authentication and protected routes
+- Roles such as admin, operator, owner, and user
+- User preferences for language, timezone, and notifications
+- Full audit trail for critical changes
+
+## Tech Stack
+
+### Frontend
+- React 18
+- React Router 6
+- Vite
+- CSS Modules
+- Recharts
+- i18next
+- Supabase client SDK
+
+### Backend
+- Node.js 18+
+- Express
+- Supabase JavaScript client
+- Helmet
+- CORS
+- Morgan
+- Express Rate Limit
+
+### Data Layer
+- Supabase PostgreSQL
+- SQL views for active alerts, latest readings, and device summaries
+- Audit logging and soft-delete patterns
+
+## Frontend Summary
+
+The frontend provides the operational interface for the system.
+
+Main pages:
+- Login
+- Signup
+- Dashboard
+- Sensors
+- Controls
+- History
+- Reports
+- Devices
+- Alerts
+- Settings
+
+Frontend capabilities include:
+- protected routes
+- chart-based visualization
+- actuator toggles and rule displays
+- CSV, JSON, and PDF export flows
+- responsive UI
+- periodic refresh for live data
+
+Frontend code lives primarily in `frontend/src`.
+
+## Backend Summary
+
+The backend exposes the REST API used by the frontend and device integrations.
+
+Base route groups:
+- `/api/auth`
+- `/api/users`
+- `/api/devices`
+- `/api/sensors`
+- `/api/readings`
+- `/api/actuators`
+- `/api/controls`
+- `/api/alerts`
+- `/api/automation`
+- `/api/audit`
+
+Health endpoint:
+- `GET /health`
+
+The backend handles:
+- authentication and authorization
+- Supabase database access
+- readings ingestion
+- actuator and control state updates
+- automation evaluation
+- alert lifecycle operations
+- audit logging
+
+Backend code lives primarily in `backend/src`.
+
+## Database Summary
+
+The database is organized into these main domains:
+
+### Device structure
+- `parent_units`
+- `child_units`
+- `devices`
+- `device_settings`
+
+### Monitoring data
+- `sensor_types`
+- `sensors`
+- `readings`
+
+### Control and automation
+- `actuators`
+- `control_actions`
+- `control_history`
+- `automation_rules`
+
+### Alerts and monitoring workflow
+- `alert_rules`
+- `alerts`
+- `vw_active_alerts`
+- `vw_device_summary`
+- `vw_latest_readings`
+
+### Users and governance
+- `users`
+- `user_preferences`
+- `audit_log`
+
+Supporting documents:
+- `DATABASE-README.md` for the technical schema reference
+- `DATABASE-CLIENT-README.md` for the simplified client-facing version
+
+## Quick Start
 
 ### Prerequisites
-- Node.js 16+ and npm
-- (Optional) Supabase account for production deployment
+- Node.js 18 or newer
+- npm
+- A Supabase project
 
-### Installation
+### 1. Start the backend
 
 ```bash
-# Install dependencies
+cd backend
 npm install
-
-# (Optional) Install Supabase for production
-npm install @supabase/supabase-js
-
-# Copy environment template
-cp .env.example .env
-# Edit .env with your configuration
 ```
 
-### Development
+Create `backend/.env` with values similar to:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+```
+
+Run the API:
 
 ```bash
-# Start development server (http://localhost:5173)
 npm run dev
+```
 
-# Build for production
+Backend runs on:
+
+```text
+http://localhost:5000
+```
+
+### 2. Start the frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env` with values similar to:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Run the frontend:
+
+```bash
+npm run dev
+```
+
+Frontend runs on:
+
+```text
+http://localhost:5173
+```
+
+### 3. Verify the backend
+
+```bash
+curl http://localhost:5000/health
+```
+
+Expected response:
+
+```json
+{"status":"OK","timestamp":"2026-03-16T00:00:00.000Z","service":"BioScope API"}
+```
+
+## Development Commands
+
+### Backend
+
+```bash
+cd backend
+npm run dev
+npm start
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run dev
 npm run build
-
-# Preview production build
 npm run preview
 ```
 
-### Default Login (Development Mode)
-Since auth is currently using localStorage mock:
-- Any email/password combination will work
-- User data persists in browser storage
-- For production, configure Supabase (see SETUP-GUIDE.md)
+## API Summary
 
-## 🎨 UI Improvements
+### Auth
+- `POST /api/auth/signup`
+- `POST /api/auth/signin`
+- `POST /api/auth/signout`
+- `POST /api/auth/refresh`
+- `POST /api/auth/reset-password`
+- `GET /api/auth/me`
+- `PUT /api/auth/me`
+- `DELETE /api/auth/me`
 
-### Enhanced Readability
-- **Increased Font Sizes**: All text is now 15-20% larger for better visibility
-- **Lighter Color Scheme**: Changed from dark green (#030d09) to lighter tones (#0a1612)
-- **Better Contrast**: Text colors improved from #81c784 to #9ed9b3
-- **Accent Colors**: Primary green changed from #a8f5c6 to #7de3aa for better readability
+### Devices
+- `GET /api/devices`
+- `GET /api/devices/:id`
+- `GET /api/devices/:id/summary`
+- `GET /api/devices/:id/slots`
+- `GET /api/devices/:id/latest-state`
+- `POST /api/devices`
+- `PATCH /api/devices/:id`
+- `PATCH /api/devices/:id/slots`
+- `DELETE /api/devices/:id`
 
-### Before vs After
-| Element | Before | After |
-|---------|--------|-------|
-| Base Background | `#030d09` | `#0a1612` |
-| Primary Green | `#a8f5c6` | `#7de3aa` |
-| Secondary Text | `#81c784` | `#9ed9b3` |
-| Base Font Size | 14px | 16px |
-| Section Headers | 14px | 16px |
-| Metric Values | 36px | 42px |
+### Sensors
+- `GET /api/sensors/types`
+- `GET /api/sensors`
+- `GET /api/sensors/:id`
+- `POST /api/sensors`
+- `PATCH /api/sensors/:id`
+- `DELETE /api/sensors/:id`
 
-## 🔐 Authentication
+### Readings
+- `GET /api/readings`
+- `GET /api/readings/latest`
+- `GET /api/readings/stats`
+- `GET /api/readings/chart`
+- `POST /api/readings`
 
-### Current Implementation (Development)
-- Mock authentication using localStorage
-- Persistent sessions across browser refreshes
-- Protected routes with automatic redirect to login
+### Actuators
+- `GET /api/actuators`
+- `GET /api/actuators/:id`
+- `POST /api/actuators`
+- `PATCH /api/actuators/:id`
+- `PATCH /api/actuators/:id/toggle`
+- `DELETE /api/actuators/:id`
 
-### Production Setup (Supabase)
-See [SETUP-GUIDE.md](./SETUP-GUIDE.md) for complete Supabase integration instructions including:
-- Database schema
-- Row Level Security policies
-- Authentication configuration
-- Real-time subscriptions
+### Controls
+- `GET /api/controls`
+- `GET /api/controls/:id`
+- `POST /api/controls`
 
-## Deploying to Vercel
+### Alerts
+- `GET /api/alerts/rules`
+- `POST /api/alerts/rules`
+- `PATCH /api/alerts/rules/:id`
+- `DELETE /api/alerts/rules/:id`
+- `GET /api/alerts/active`
+- `GET /api/alerts`
+- `POST /api/alerts`
+- `PATCH /api/alerts/:id/acknowledge`
+- `PATCH /api/alerts/:id/resolve`
 
-```bash
-npm install -g vercel
-vercel --prod
-```
+### Automation
+- `GET /api/automation`
+- `GET /api/automation/:id`
+- `POST /api/automation/evaluate/:device_id`
+- `POST /api/automation`
+- `PATCH /api/automation/:id`
+- `DELETE /api/automation/:id`
 
-> **Note:** Change `BASE` in `src/api/index.js` to your production API URL before deploying.
+### Audit
+- `GET /api/audit`
+- `GET /api/audit/device/:deviceId`
+- `POST /api/audit`
 
-## Design System
+### Users
+- `GET /api/users/preferences`
+- `PATCH /api/users/preferences`
+- `GET /api/users`
+- `GET /api/users/:id`
+- `PATCH /api/users/:id`
+- `DELETE /api/users/:id`
 
-Design tokens live in `src/styles/global.css` as CSS custom properties:
-- `--green` / `--cyan` / `--amber` / `--red` — accent colours
-- `--bg-base` / `--bg-surface` / `--bg-card` — surface layers
-- `--font-display` (Outfit) + `--font-mono` (JetBrains Mono) — typography
+## Architecture Notes
 
-## Auto-refresh
+### Parent and child model
+- A parent unit manages one or more child units
+- Child units are the primary source of readings and attached sensors
+- Parent units own settings and automation behavior
 
-All sensor data pages auto-refresh every **15 seconds** via the `useInterval` hook.
-The topbar "Refresh" button triggers an immediate manual refresh.
+### Control slots
+- Relay outputs are assigned using `device_settings`
+- Slot mapping determines whether slot 1 or slot 2 controls fan, heater, or light
+
+### Automation behavior
+- Rules are evaluated against device readings
+- Previous actuator states are preserved when no rule matches
+- Fan and heater are treated as mutually exclusive outputs
+
+### Time handling
+- Database timestamps should be stored in UTC
+- Frontend formatting should convert UTC timestamps for display
+
+## Deployment Notes
+
+### Frontend
+- Vite build output can be deployed to Vercel or any static hosting platform
+- `frontend/vercel.json` is available for Vercel deployment
+
+### Backend
+- Deploy as a Node.js service
+- Keep `SUPABASE_SERVICE_KEY` server-side only
+- Configure `FRONTEND_URL` correctly for CORS
+
+### Database
+- Use Supabase SQL editor or migrations to maintain schema
+- Keep `DATABASE-CLIENT-README.md` as the client-facing data document
+- Keep `DATABASE-README.md` as the engineering-level schema document
+
+## Additional Documents
+
+- `frontend/README.md` for frontend-only notes
+- `backend/README.md` for backend-only notes
+- `frontend/SETUP-GUIDE.md` for frontend setup detail
+- `DATABASE-README.md` for the full schema reference
+- `DATABASE-CLIENT-README.md` for simplified client documentation
+
+## Notes
+
+- The backend is the source of truth for business logic and database access
+- The frontend consumes the backend API and renders operational dashboards
+- Supabase is used for persistence and authentication infrastructure
+- Audit history and control history should be preserved as operational records
