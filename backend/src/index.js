@@ -23,6 +23,10 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
+const envOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean)
 
 // ── Security & Middleware ─────────────────────────────────────────────────────
 app.use(helmet())
@@ -35,7 +39,7 @@ app.use(cors({
     const allowed = origin.includes('localhost') ||
       origin.includes('127.0.0.1') ||
       origin.includes('192.168.') ||
-      origin === process.env.FRONTEND_URL;
+      envOrigins.includes(origin);
 
     if (allowed) {
       callback(null, true);

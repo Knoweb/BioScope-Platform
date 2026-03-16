@@ -426,6 +426,7 @@ npm run preview
 - `frontend/SETUP-GUIDE.md` for frontend setup detail
 - `DATABASE-README.md` for the full schema reference
 - `DATABASE-CLIENT-README.md` for simplified client documentation
+- `DEPLOYMENT-DO-CICD.md` for DigitalOcean GitHub Actions deployment
 
 ## Notes
 
