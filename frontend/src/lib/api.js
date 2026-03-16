@@ -6,6 +6,13 @@
 const API_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? `${window.location.origin}/api` : '/api')
 
+const toNetworkError = (err) => {
+  const e = new Error('Network error: unable to reach API server')
+  e.code = 'NETWORK_ERROR'
+  e.cause = err
+  return e
+}
+
 
 // Get stored token
 const getToken = () => localStorage.getItem('bioscope_token')
@@ -51,7 +58,27 @@ const parseBody = async (res) => {
 
 // Core request function
 const request = async (endpoint, options = {}) => {
-  const token = getToken()
+  const isAuthEndpoint = endpoint.startsWith('/auth/')
+  let token = getToken()
+
+  // Avoid sending protected requests without a bearer token.
+  // If only a refresh token exists, refresh first and then continue.
+  if (!isAuthEndpoint && !token) {
+    const refreshToken = localStorage.getItem('bioscope_refresh_token')
+    if (refreshToken) {
+      try {
+        token = await doRefresh()
+      } catch {
+        clearToken()
+        localStorage.removeItem('bioscope_refresh_token')
+        window.dispatchEvent(new CustomEvent('bioscope:session-expired'))
+        throw new Error('Session expired')
+      }
+    } else {
+      window.dispatchEvent(new CustomEvent('bioscope:session-expired'))
+      throw new Error('No active session')
+    }
+  }
 
   const config = {
     headers: {
@@ -62,7 +89,12 @@ const request = async (endpoint, options = {}) => {
     ...options
   }
 
-  const res = await fetch(`${API_URL}${endpoint}`, config)
+  let res
+  try {
+    res = await fetch(`${API_URL}${endpoint}`, config)
+  } catch (err) {
+    throw toNetworkError(err)
+  }
   const data = await parseBody(res)
 
   // ── 401 handling: try token refresh then retry once ──────────────────────
@@ -83,7 +115,12 @@ const request = async (endpoint, options = {}) => {
       ...config,
       headers: { ...config.headers, Authorization: `Bearer ${newToken}` }
     }
-    const retryRes = await fetch(`${API_URL}${endpoint}`, retryConfig)
+    let retryRes
+    try {
+      retryRes = await fetch(`${API_URL}${endpoint}`, retryConfig)
+    } catch (err) {
+      throw toNetworkError(err)
+    }
     const retryData = await parseBody(retryRes)
     if (!retryRes.ok) throw new Error(retryData?.error || `Request failed: ${retryRes.status}`)
     return retryData

@@ -13,8 +13,7 @@ async function run() {
             trigger_condition: 'temperature > 30',
             action: 'act2_fan:on',
             is_active: true,
-            created_by_user_id: userId,
-            priority: 10
+            created_by_user_id: userId
         },
         {
             name: 'A2 Fan Auto-OFF (Normal Temp)',
@@ -22,8 +21,7 @@ async function run() {
             trigger_condition: 'temperature < 25',
             action: 'act2_fan:off',
             is_active: true,
-            created_by_user_id: userId,
-            priority: 10
+            created_by_user_id: userId
         }
     ];
 

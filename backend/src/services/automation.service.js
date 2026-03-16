@@ -31,6 +31,40 @@ class AutomationService {
         this._evaluating = new Set();
     }
 
+    async _getLatestReadingForDevice(device_id) {
+        // 1) Try direct readings for this device id (works for child ids).
+        let { data: reading } = await supabase
+            .from('readings')
+            .select('temperature, humidity, light_level, recorded_at')
+            .eq('device_id', device_id)
+            .order('recorded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (reading) return reading;
+
+        // 2) If this is a parent unit id, resolve its highest-priority child and use that reading.
+        const { data: child } = await supabase
+            .from('child_units')
+            .select('unit_id')
+            .eq('parent_unit_id', device_id)
+            .order('priority', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+        if (!child?.unit_id) return null;
+
+        ({ data: reading } = await supabase
+            .from('readings')
+            .select('temperature, humidity, light_level, recorded_at')
+            .eq('device_id', child.unit_id)
+            .order('recorded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle());
+
+        return reading || null;
+    }
+
     /**
      * Core evaluation loop:
      * 1. Load last known state (fan/heater/light) from control_actions
@@ -61,13 +95,7 @@ class AutomationService {
             }
 
             // ── 1. Latest sensor reading ──────────────────────────────────────────
-            const { data: reading } = await supabase
-                .from('readings')
-                .select('temperature, humidity, light_level, recorded_at')
-                .eq('device_id', device_id)
-                .order('recorded_at', { ascending: false })
-                .limit(1)
-                .single();
+            const reading = await this._getLatestReadingForDevice(device_id);
 
             if (!reading) {
                 console.log(`[AutoEngine] No reading found for ${device_id}`);
@@ -93,19 +121,14 @@ class AutomationService {
             console.log(`[AutoEngine] Previous state: fan=${resolved.fan} heater=${resolved.heater} light=${resolved.light}`);
 
             // ── 3. Evaluate rules ─────────────────────────────────────────────────
-            // Note: If the priority column doesn't exist yet, fall back to created_at order
-            let rulesQuery = supabase
+            // Rules are evaluated in their creation order.
+            const rulesQuery = supabase
                 .from('automation_rules')
                 .select('*')
                 .eq('device_id', device_id)
                 .eq('is_active', true);
 
-            let { data: rules, error: rulesErr } = await rulesQuery.order('priority', { ascending: true });
-            if (rulesErr) {
-                // priority column may not exist yet — retry without ordering
-                console.warn('[AutoEngine] priority order failed, retrying without order:', rulesErr.message);
-                ({ data: rules } = await rulesQuery.order('created_at', { ascending: true }));
-            }
+            const { data: rules } = await rulesQuery.order('created_at', { ascending: true });
 
             const ruleLog = [];
             for (const rule of (rules || [])) {
@@ -116,7 +139,7 @@ class AutomationService {
                     const keyMatch = rawDevice && rawDevice.match(/(fan|heater|light)/i);
                     const device = keyMatch ? keyMatch[1].toLowerCase() : (rawDevice || '').toLowerCase();
                     if (device && state && resolved.hasOwnProperty(device)) {
-                        resolved[device] = state.trim();
+                        resolved[device] = state.trim().toLowerCase(); // normalize to lowercase (avoids 'ON' vs 'on' mismatch)
                         ruleLog.push(`${rule.name} → ${device}:${state}`);
                         console.log(`[AutoEngine] Rule matched: "${rule.name}" → ${device}:${state}`);
                     }
@@ -151,7 +174,7 @@ class AutomationService {
                 action_type: 'auto_evaluate',
                 new_status: resolved.fan === 'on' || resolved.heater === 'on' || resolved.light === 'on',
                 fan_state: resolved.fan,
-                heater_state: resolved.heater,
+                heater_state: resolved.heater,  
                 light_state: resolved.light,
                 status: 'success',
                 reason: ruleLog.length ? ruleLog.join('; ') : 'No rule matched — previous state preserved',
@@ -179,14 +202,20 @@ class AutomationService {
                 let targetStatus = null;
 
                 for (const t of slotTargets) {
-                    // Match e.g. "actuator 1 fan" — must contain the slot number AND the device key
-                    if (nameLower.includes(t.slotNum) && nameLower.includes(t.deviceKey)) {
+                    // Match by device key: "fan" → "Fan", "light" → "LED Light" / "Light", "heater" → "Heater"
+                    // Also accept "led" as an alias for "light" since common actuator name is "LED Light"
+                    const matchesKey = nameLower.includes(t.deviceKey) ||
+                        (t.deviceKey === 'light' && nameLower.includes('led'));
+                    if (matchesKey) {
                         targetStatus = t.targetOn;
                         break;
                     }
                 }
 
-                if (targetStatus === null) continue; // actuator not assigned to any active slot
+                // Any actuator not assigned to one of the two active slots must be OFF.
+                // This prevents stale ON states from unassigned devices (for example fan)
+                // from confusing the UI and blocking mutually exclusive actuators.
+                if (targetStatus === null) targetStatus = false;
                 if (act.status === targetStatus) continue; // no change needed
 
                 const { error: updErr } = await supabase

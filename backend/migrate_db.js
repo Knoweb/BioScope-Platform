@@ -28,9 +28,6 @@ async function migrate() {
         status text NOT NULL,
         timestamp timestamptz DEFAULT now()
     );
-
-    -- Add priority and complex condition columns to automation_rules if they don't exist
-    ALTER TABLE public.automation_rules ADD COLUMN IF NOT EXISTS priority integer DEFAULT 10;
     
     -- Drop old rules matching 'turn_fan_on' etc to clean up
     DELETE FROM public.automation_rules WHERE action LIKE 'turn_%';
@@ -60,7 +57,6 @@ async function migrate() {
             trigger_condition: 'temperature > 30',
             action: 'Set A1 Fan ON',
             action_json: { act1_fan: true },
-            priority: 1,
             is_active: true
         },
         {
@@ -69,7 +65,6 @@ async function migrate() {
             trigger_condition: 'temperature < 25',
             action: 'Set A1 Fan OFF',
             action_json: { act1_fan: false },
-            priority: 2,
             is_active: true
         },
         {
@@ -78,7 +73,6 @@ async function migrate() {
             trigger_condition: 'light_level < 200',
             action: 'Set A1 Light ON',
             action_json: { act1_light: true },
-            priority: 1,
             is_active: true
         },
         {
@@ -87,7 +81,6 @@ async function migrate() {
             trigger_condition: 'temperature < 20',
             action: 'Set A2 Heater ON',
             action_json: { act2_heater: true },
-            priority: 1,
             is_active: true
         }
     ];

@@ -149,12 +149,14 @@ export function ChartTimeSelector({ value, onChange, options }) {
 }
 
 // ── Btn ────────────────────────────────────────────────────────────────────
-export function Btn({ children, onClick, variant = 'secondary', icon, disabled, loading }) {
+export function Btn({ children, onClick, variant = 'secondary', icon, disabled, loading, type = 'button', ...rest }) {
   return (
     <button
       className={`${styles.btn} ${styles[`btn_${variant}`]}`}
+      type={type}
       onClick={onClick}
       disabled={disabled || loading}
+      {...rest}
     >
       {loading ? <div className={styles.btnSpinner} /> : icon && <span className={styles.btnIcon}>{icon}</span>}
       {children}

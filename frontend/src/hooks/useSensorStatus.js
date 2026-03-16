@@ -38,6 +38,11 @@ export function useSensorStatus(deviceId) {
                     reading: latest,
                 })
             } catch (e) {
+                // Treat transient network errors as offline sensor status without noisy logs.
+                if (e?.code === 'NETWORK_ERROR' || /failed to fetch/i.test(String(e?.message || ''))) {
+                    setStatus({ isStale: true, minutesSince: 999, severity: 'offline', lastUpdated: null })
+                    return
+                }
                 console.error('[useSensorStatus]', e.message)
             }
         }

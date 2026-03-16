@@ -138,7 +138,11 @@ export function useControls() {
       actuators.forEach(a => { if (!byDevice[a.device_id]) byDevice[a.device_id] = []; byDevice[a.device_id].push(a) })
       for (const [devId, acts] of Object.entries(byDevice)) { map[devId] = buildStatusMap(acts) }
       setControls(map)
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      if (e?.code !== 'NETWORK_ERROR' && !/failed to fetch/i.test(String(e?.message || ''))) {
+        console.error(e)
+      }
+    }
     finally { setLoading(false) }
   }, [])
 

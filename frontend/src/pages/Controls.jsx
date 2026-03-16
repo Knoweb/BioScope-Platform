@@ -14,6 +14,26 @@ const DEVICE_INFO = {
   light: { labelKey: 'controls.actuators.light.label', icon: '💡', color: 'var(--amber)' },
 }
 
+const getActionDeviceKey = (action) => {
+  const raw = String(action || '').split(':')[0].toLowerCase()
+  if (raw.includes('fan')) return 'fan'
+  if (raw.includes('heat')) return 'heater'
+  if (raw.includes('light') || raw.includes('led')) return 'light'
+  return null
+}
+
+const parseThresholdCondition = (condition) => {
+  const m = String(condition || '').trim().match(/^(\w+)\s*(>=|<=|>|<|==|!=)\s*(-?\d+\.?\d*)$/)
+  if (!m) return null
+  return {
+    metric: m[1],
+    operator: m[2],
+    value: Number(m[3]),
+  }
+}
+
+const formatThresholdValue = (v) => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(2))))
+
 // Evaluate a simple condition string against sensor readings
 const evaluateCondition = (condition, reading) => {
   if (!reading || !condition) return false
@@ -86,7 +106,7 @@ function SensorMetrics({ reading, severity, minutesSince }) {
 }
 
 /* ── Slot Card ─────────────────────────────────────────────────────────────── */
-function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, isLoading, onToggle,
+function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, manualIsOn, isLoading, onToggle,
   isManual, automationRules, reading, otherSlotDevice, isBlocked, toggleDisabled }) {
   const { t } = useTranslation()
   const info = DEVICE_INFO[assignedDevice] || DEVICE_INFO.fan
@@ -97,7 +117,7 @@ function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, isLoading, on
     const prefix = assignedDevice + ':'
     return automationRules
       .filter(r => r.is_active && r.action?.startsWith(prefix))
-      .sort((a, b) => (a.priority || 10) - (b.priority || 10))
+      .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
       .find(r => evaluateCondition(r.trigger_condition, reading)) || null
   }, [automationRules, reading, assignedDevice])
 
@@ -190,9 +210,9 @@ function SlotCard({ slotNum, assignedDevice, onDeviceChange, isOn, isLoading, on
       }}>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{t('controls.manualState', 'Manual State')}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Toggle on={isOn} loading={isLoading} onChange={onToggle} disabled={toggleDisabled || isBlocked} />
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 26, color: isOn ? info.color : 'var(--text-muted)' }}>
-            {isOn ? t('controls.on', 'ON') : t('controls.off', 'OFF')}
+          <Toggle on={manualIsOn} loading={isLoading} onChange={onToggle} disabled={toggleDisabled || isBlocked} />
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 26, color: manualIsOn ? info.color : 'var(--text-muted)' }}>
+            {manualIsOn ? t('controls.on', 'ON') : t('controls.off', 'OFF')}
           </span>
         </div>
       </div>
@@ -233,6 +253,9 @@ export default function Controls({ addToast }) {
   const { rules: automationRules, loading: rulesLoading, updateRule } = useAutomationRules(device)
   const sensorStatus = useSensorStatus(device)
 
+  const [autoResolvedState, setAutoResolvedState] = useState(null)
+  const toOn = (v) => String(v || '').toLowerCase() === 'on' || v === true
+
   // Slot assignment state
   const [slots, setSlots] = useState({ slot_1_device: 'fan', slot_2_device: 'light' })
   const [slotsLoading, setSlotsLoading] = useState(false)
@@ -258,12 +281,26 @@ export default function Controls({ addToast }) {
     if (!device) return
     api.get(`/devices/${device}/latest-state`).then(r => {
       if (r.data?.triggered_by) setLastReason(r.data.triggered_by)
+      if (r.data) {
+        setAutoResolvedState({
+          fan: toOn(r.data.fan_state),
+          heater: toOn(r.data.heater_state),
+          light: toOn(r.data.light_state),
+        })
+      }
     }).catch(() => { })
   }, [device])
 
   const dObj = parents.find(p => p.device_id === device)
   const isManual = dObj?.control_mode === 'manual'
   const ctrl = controls[device] ?? {}
+  const effectiveCtrl = useMemo(() => {
+    if (isManual || !autoResolvedState) return ctrl
+    const assignedAutoState = {}
+    if (slots.slot_1_device) assignedAutoState[slots.slot_1_device] = !!autoResolvedState[slots.slot_1_device]
+    if (slots.slot_2_device) assignedAutoState[slots.slot_2_device] = !!autoResolvedState[slots.slot_2_device]
+    return { ...ctrl, ...assignedAutoState }
+  }, [isManual, autoResolvedState, ctrl, slots])
 
   // Auto-evaluation cycle (every 30s in AUTO mode)
   useEffect(() => {
@@ -275,6 +312,11 @@ export default function Controls({ addToast }) {
         const r = await api.post(`/automation/evaluate/${device}`)
         if (r.data?.resolved) {
           const res = r.data.resolved
+          setAutoResolvedState({
+            fan: toOn(res.fan),
+            heater: toOn(res.heater),
+            light: toOn(res.light),
+          })
           setLastReason(`fan:${res.fan} heater:${res.heater} light:${res.light}`)
           refetchControls() // sync actuator ON/OFF state immediately after automation
         }
@@ -313,17 +355,39 @@ export default function Controls({ addToast }) {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState(null)
-  const [editValue, setEditValue] = useState('')
-  const [editPriority, setEditPriority] = useState(10)
+  const [editMetric, setEditMetric] = useState('')
+  const [editOperator, setEditOperator] = useState('')
+  const [editThreshold, setEditThreshold] = useState(0)
+  const [editStep, setEditStep] = useState(1)
   const [savingRule, setSavingRule] = useState(false)
 
-  const openModal = r => { setEditingRule(r); setEditValue(r.trigger_condition); setEditPriority(r.priority || 10); setModalOpen(true) }
-  const closeModal = () => { setModalOpen(false); setEditingRule(null) }
+  const openModal = r => {
+    const parsed = parseThresholdCondition(r.trigger_condition)
+    if (!parsed) {
+      addToast(t('controls.unsupportedThresholdFormat', { defaultValue: 'This rule format cannot be edited with +/- threshold controls.' }), 'error')
+      return
+    }
+    setEditingRule(r)
+    setEditMetric(parsed.metric)
+    setEditOperator(parsed.operator)
+    setEditThreshold(parsed.value)
+    setEditStep(Number.isInteger(parsed.value) ? 1 : 0.1)
+    setModalOpen(true)
+  }
+  const closeModal = () => {
+    setModalOpen(false)
+    setEditingRule(null)
+  }
+
+  const adjustThreshold = (delta) => {
+    setEditThreshold((prev) => Number((prev + delta).toFixed(2)))
+  }
 
   const handleSaveRule = async (e) => {
     e.preventDefault(); setSavingRule(true)
     try {
-      await updateRule(editingRule.rule_id, { trigger_condition: editValue, priority: editPriority })
+      const trigger_condition = `${editMetric} ${editOperator} ${formatThresholdValue(editThreshold)}`
+      await updateRule(editingRule.rule_id, { trigger_condition })
       addToast(t('controls.ruleUpdated', 'Rule updated'), 'success'); closeModal()
     } catch (err) { addToast(t('controls.failedWithReason', { reason: err.message, defaultValue: `Failed: ${err.message}` }), 'error') }
     finally { setSavingRule(false) }
@@ -331,7 +395,31 @@ export default function Controls({ addToast }) {
 
   const switchMode = async (newMode) => {
     const { success, error } = await updateDeviceMode(device, newMode)
-    if (success) addToast(t('controls.switchedToMode', { mode: newMode.toUpperCase(), defaultValue: `Switched to ${newMode.toUpperCase()}` }), 'success')
+    if (success) {
+      addToast(t('controls.switchedToMode', { mode: newMode.toUpperCase(), defaultValue: `Switched to ${newMode.toUpperCase()}` }), 'success')
+      if (newMode === 'auto') {
+        setAutoEvalRunning(true)
+        try {
+          const r = await api.post(`/automation/evaluate/${device}`)
+          if (r.data?.resolved) {
+            const res = r.data.resolved
+            setAutoResolvedState({
+              fan: toOn(res.fan),
+              heater: toOn(res.heater),
+              light: toOn(res.light),
+            })
+            setLastReason(`fan:${res.fan} heater:${res.heater} light:${res.light}`)
+            refetchControls()
+          }
+        } catch (e) {
+          // keep mode switch success; evaluation can retry on interval
+        } finally {
+          setAutoEvalRunning(false)
+        }
+      } else {
+        setAutoResolvedState(null)
+      }
+    }
     else addToast(t('controls.failedWithReason', { reason: error, defaultValue: `Failed: ${error}` }), 'error')
   }
 
@@ -413,10 +501,11 @@ export default function Controls({ addToast }) {
           const assigned = slots[slotKey] || (slotNum === 1 ? 'fan' : 'light')
           const otherKey = `slot_${slotNum === 1 ? 2 : 1}_device`
           const otherDev = slots[otherKey] || (slotNum === 1 ? 'light' : 'fan')
-          const isOn = !!ctrl[assigned]
+          const isOn = !!effectiveCtrl[assigned]
+          const manualIsOn = !!ctrl[assigned]
           const isLoading = updating === `${device}.${assigned}`
           const info = DEVICE_INFO[assigned]
-          const isBlocked = !isOn && info?.exclusive && ctrl[info.exclusive]
+          const isBlocked = !isOn && info?.exclusive && effectiveCtrl[info.exclusive]
           return (
             <SlotCard
               key={slotNum}
@@ -424,6 +513,7 @@ export default function Controls({ addToast }) {
               assignedDevice={assigned}
               onDeviceChange={handleSlotChange}
               isOn={isOn}
+              manualIsOn={manualIsOn}
               isLoading={isLoading}
               onToggle={() => handleToggle(assigned)}
               isManual={isManual}
@@ -439,7 +529,7 @@ export default function Controls({ addToast }) {
 
       {/* Unassigned device warnings */}
       {unassignedDevices.map(d => {
-        const isStuckOn = !!ctrl[d]
+        const isStuckOn = !!effectiveCtrl[d]
         return (
           <div key={d} style={{
             background: isStuckOn ? 'rgba(255,60,60,0.1)' : 'rgba(255,160,0,0.08)',
@@ -484,6 +574,8 @@ export default function Controls({ addToast }) {
             <div className={styles.ruleList}>
               {automationRules.map(r => {
                 const matched = r.is_active && evaluateCondition(r.trigger_condition, sensorStatus.reading)
+                const actionDevice = getActionDeviceKey(r.action)
+                const actionable = !actionDevice || assignedDevices.includes(actionDevice)
                 return (
                   <div key={r.rule_id} className={styles.ruleRow}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.88rem', color: 'var(--text-main)', flex: 1 }}>
@@ -493,8 +585,13 @@ export default function Controls({ addToast }) {
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--cyan)', marginRight: 8 }}>
                       {translateActionText(r.action, t)}
                     </span>
-                    {matched && (
+                    {matched && actionable && (
                       <span style={{ fontSize: '0.75rem', color: 'var(--green)', fontWeight: 700, whiteSpace: 'nowrap' }}>✓ {t('controls.matched', 'matched')}</span>
+                    )}
+                    {matched && !actionable && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--amber)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        {t('controls.unassignedRule', { defaultValue: 'not assigned to a slot' })}
+                      </span>
                     )}
                     {isAdminOrOwner && (
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 12 }}>
@@ -510,7 +607,7 @@ export default function Controls({ addToast }) {
               })}
             </div>
             <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
-              {t('controls.mutualExclusiveNote', '🔒 Fan and Heater are mutually exclusive — if both rules match, Fan takes priority.')}
+              {t('controls.mutualExclusiveNote', '🔒 Fan and Heater are mutually exclusive — if both rules match, Heater is forced OFF.')}
             </div>
           </>
         )}
@@ -528,14 +625,15 @@ export default function Controls({ addToast }) {
             <form onSubmit={handleSaveRule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('controls.triggerCondition', 'Trigger Condition')}</label>
-                <input required type="text" value={editValue} onChange={e => setEditValue(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.95rem' }}
-                  placeholder={t('controls.triggerPlaceholder', 'e.g. temperature > 30')} />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('controls.priority', 'Priority (1 = highest)')}</label>
-                <input required type="number" min="1" max="100" value={editPriority} onChange={e => setEditPriority(Number(e.target.value))}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.95rem' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    readOnly
+                    value={`${editMetric} ${editOperator} ${formatThresholdValue(editThreshold)}`}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.95rem' }}
+                  />
+                  <Btn type="button" variant="secondary" onClick={() => adjustThreshold(-editStep)}>-</Btn>
+                  <Btn type="button" variant="secondary" onClick={() => adjustThreshold(editStep)}>+</Btn>
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                 <Btn variant="secondary" onClick={closeModal} type="button">{t('controls.cancel', 'Cancel')}</Btn>

@@ -40,6 +40,7 @@ export default function Dashboard({ addToast }) {
 
   // Fetch slot assignments for parent devices
   const [slotMap, setSlotMap] = useState({})
+
   useEffect(() => {
     devices.filter(d => d.type === 'parent').forEach(d => {
       api.get(`/devices/${d.device_id}/slots`).then(r => {
@@ -145,6 +146,7 @@ export default function Dashboard({ addToast }) {
                         const assigned = devSlots[slotKey] || (slotNum === 1 ? 'fan' : 'light')
                         const ICONS = { fan: '🌀', heater: '🔥', light: '💡' }
                         const COLORS = { fan: 'var(--cyan)', heater: 'var(--red)', light: 'var(--amber)' }
+                        // ctrl is kept live by the realtime subscription in useControls
                         const isOn = !!ctrl[assigned]
                         const color = COLORS[assigned] || 'var(--text-muted)'
                         return (

@@ -16,18 +16,7 @@ ALTER TABLE public.control_actions
   ADD COLUMN IF NOT EXISTS heater_state VARCHAR(3),
   ADD COLUMN IF NOT EXISTS light_state  VARCHAR(3);
 
--- 3. Add priority column to automation_rules
---    Lower number = evaluated first. Default 10 = normal priority.
---    This column is ORDER BY'd in the automation engine — without it all rules are skipped.
-ALTER TABLE public.automation_rules
-  ADD COLUMN IF NOT EXISTS priority INT DEFAULT 10;
-
--- Backfill sensible priorities for existing rules based on action type
-UPDATE public.automation_rules SET priority = 5  WHERE action LIKE 'fan:%';
-UPDATE public.automation_rules SET priority = 6  WHERE action LIKE 'heater:%';
-UPDATE public.automation_rules SET priority = 10 WHERE action LIKE 'light:%';
-
--- 4. Add slot assignment columns to device_settings
+-- 3. Add slot assignment columns to device_settings
 --    Stores which logical device (fan/heater/light) is physically plugged into each slot
 ALTER TABLE public.device_settings
   ADD COLUMN IF NOT EXISTS slot_1_device VARCHAR(20) DEFAULT 'fan',
