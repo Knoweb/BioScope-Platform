@@ -9,6 +9,12 @@ fi
 DOMAIN="$1"
 APP_USER="$(whoami)"
 
+if [[ "$DOMAIN" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+  SERVER_NAMES="$DOMAIN"
+else
+  SERVER_NAMES="$DOMAIN www.$DOMAIN"
+fi
+
 echo "Updating apt packages..."
 sudo apt update
 sudo apt upgrade -y
@@ -58,7 +64,7 @@ upstream bioscope_frontend {
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN} www.${DOMAIN};
+  server_name ${SERVER_NAMES};
 
     location /api/ {
         proxy_pass http://bioscope_backend/api/;
