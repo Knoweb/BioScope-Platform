@@ -87,6 +87,9 @@ jobs:
           RELEASE_ID="${GITHUB_SHA::12}"
           REMOTE_DIR="/tmp/bioscope-deploy-${RELEASE_ID}"
 
+
+          ssh -i ~/.ssh/id_ed25519 -p ${PORT} ${DO_USER}@${DO_HOST} "mkdir -p ${REMOTE_DIR}"
+
           rsync -az -e "ssh -i ~/.ssh/id_ed25519 -p ${PORT}" \
             scripts/deploy_docker_remote.sh "${DO_USER}@${DO_HOST}:${REMOTE_DIR}/deploy_docker_remote.sh"
 
